@@ -4,7 +4,7 @@ import pytest
 
 from hw5 import *
 
-
+a = 1
 def test_valid_input():
     fname = pathlib.Path(__file__)
     q = QuestionnaireAnalysis(fname)
