@@ -35,7 +35,7 @@ The following questions should be answered by writing additional method(s) that 
     ```python
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
-        
+
 	Returns
 	-------
 	hist : np.ndarray
@@ -65,8 +65,8 @@ The following questions should be answered by writing additional method(s) that 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
         all questions, and replaces that missing value with the mean of the
-        other grades for that student. 
-	
+        other grades for that student.
+
 	Returns
 	-------
 	df : pd.DataFrame
@@ -76,7 +76,31 @@ The following questions should be answered by writing additional method(s) that 
         """
     ```
 
-4. **BONUS 15 POINTS** There's reason to believe that there's a correlation between the subject's gender, age and grades.
+4. Each participants should receive an integer score for his or her answers, given in a new "score" column you should add. After some deliberation it was decided that if a subject has no grade in two questions or more, the score of that subject will be NA. Write a method that produces this score by averaging the grades of the not-NaN questions in the relevant rows.
+
+    ```python
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+    ```
+
+5. **BONUS 15 POINTS** There's reason to believe that there's a correlation between the subject's gender, age and grades.
 
     a. Use the original DataFrame and transform its index into a MultiIndex with three levels: the ordinal index (row number), gender and age.
 
@@ -88,13 +112,13 @@ The following questions should be answered by writing additional method(s) that 
     def correlate_gender_age(self) -> pd.DataFrame:
         """Looks for a correlation between the gender of the subject, their age
         and the score for all five questions.
-	
+
 	Returns
 	-------
-	df : pd.DataFrame
-          A DataFrame with a MultiIndex containing the gender and whether the subject is above
-	  40 years of age, and the average score in each of the five questions.
-        """
+	pd.DataFrame
+        A DataFrame with a MultiIndex containing the gender and whether the subject is above
+	    40 years of age, and the average score in each of the five questions.
+    """
     ```
 
     [Average per group - result of `correlate_gender_age`](avg_per_group.png)
