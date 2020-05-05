@@ -40,6 +40,7 @@ class QuestionnaireAnalysis:
         plt.hist(self.data['age'].dropna(),bins=bins)
         plt.show()
         return hist, bins
+
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
 
@@ -49,3 +50,7 @@ class QuestionnaireAnalysis:
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
             """
+        df_with_at=self.data[self.data.email.str.contains("@")].reset_index(drop=True)
+        df_without_at_c=df_with_at[~df_with_at.email.str.contains("@c")].reset_index(drop=True)
+        df_without_at_dot_c=df_without_at_c[~df_without_at_c.email.str.contains("@.c")].reset_index(drop=True)
+        return df_without_at_dot_c
