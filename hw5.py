@@ -4,6 +4,7 @@ from typing import Union, Tuple
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import re
 
 
 class QuestionnaireAnalysis:
@@ -17,13 +18,15 @@ class QuestionnaireAnalysis:
         Arguments:
             data_fname {Union[pathlib.Path, str]} -- [path to .json file ocntaining subjects' data]
         """
-        self.fname = Path(data_fname)
+        self.data_fname = Path(data_fname)
+        if not self.data_fname.is_file():
+            raise ValueError
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        self.data = pd.read_json(self.fname)
+        self.data = pd.read_json(self.data_fname)
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
@@ -41,6 +44,14 @@ class QuestionnaireAnalysis:
         plt.show()
         return (hist, bins)
 
+    def check_email(self, email: str):
+        # regex = "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w)+$"
+        regex = "[^@]+@[^@]+\.[^@]+"
+        flag = False
+        if re.search(regex, email):
+            flag = True
+        return flag
+
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
 
@@ -52,7 +63,7 @@ class QuestionnaireAnalysis:
         """
         df = self.data.copy()
         for i in df.index:
-            if ".com" not in df.email[i] or "@" not in df.email[i]:
+            if not self.check_email(df.email[i]):
                 df.drop(i, inplace=True)
         df = df.reset_index(drop=True)
         return df
@@ -71,8 +82,8 @@ class QuestionnaireAnalysis:
         """
         df = self.data.copy()
         scores_df = df.loc[:, "q1":"q5"]
+        arr = scores_df.index[scores_df.isnull().any(1)]
         scores_df = scores_df.T.fillna(scores_df.mean(axis=1)).T
-        arr = df.index[df.isnull().any(1)]
         df.loc[:, "q1":"q5"] = scores_df
         return df, arr
 
@@ -99,7 +110,7 @@ class QuestionnaireAnalysis:
         scores_df = df.loc[:, "q1":"q5"]
         scores_df["score"] = scores_df.mean(axis=1).apply(np.floor)
         scores_df[scores_df.isnull().sum(axis=1) > maximal_nans_per_sub] = np.nan
-        scores = pd.Series(scores_df.score.values, dtype="UInt32")
+        scores = pd.Series(scores_df.score.values, dtype="UInt8")
         df["score"] = scores
         return df
 
