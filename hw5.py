@@ -148,6 +148,7 @@ q4 = q_a.score_subjects()
 q4_more = q_a.score_subjects(0)
 q4_x = q_a.score_subjects(2)
 
+
 # a = pd.DataFrame({'A': ['A0', 'A1', 'A2', 'A3'],
 #                    'B': ['B0', 'B1', 'B2', 'B3'],
 #                   'C': ['C0', 'C1', 'C2', 'C3'],
