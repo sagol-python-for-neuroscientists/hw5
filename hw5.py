@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import numpy as np 
 import seaborn as sns 
+import pathlib
+from typing import Union, Tuple
+import re
 
 data_fname = '/Users/guyweintraub/Desktop/Google Drive/קורסים/Python_course/hw5/data.json'
 data = pd.read_json(data_fname)
@@ -51,7 +54,11 @@ class QuestionnaireAnalysis:
             A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
             the (ordinal) index after a reset.
         """
-    
+        pattern_valid = '[^@]+@[^@]+\.com$' # structure of valid email adress
+        email_filt = self.data['email'].str.match(pattern_valid) # series - boolean filter on rows
+        df = self.data[email_filt]
+        df.reset_index(drop=True, inplace=True)
+        return df
 
 
     ####### q3 #######
@@ -67,6 +74,15 @@ class QuestionnaireAnalysis:
         arr : np.ndarray
             Row indices of the students that their new grades were generated
             """
+        # get arr: all indices of rows with NaN values
+        arr, _ = np.where(pd.isnull(self.data.loc[:,'q1':'q5']))
+        # create a series with means by row
+        m = self.data.loc[:,'q1':'q5'].mean(axis=1)
+        # loop over columns q1:q5, fill NaN with mean
+        for quest in self.data.loc[:,'q1':'q5']:
+            self.data.loc[:,quest].fillna(m,inplace=True)
+        
+        return self.data, arr
     
 
     ####### q4 #######
@@ -89,6 +105,8 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
+
+        
     
 
     ####### q5 - bonus #######
@@ -102,3 +120,10 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
+
+q = QuestionnaireAnalysis(data_fname)
+q.read_data()
+q2 = q.remove_rows_without_mail()
+q3, arr = q.fill_na_with_mean()
+
+# emails = ['guy@gmail.com','@gmail.com','guy@gmail.', 'guy@gmail.co', 'guygmail.com', 'guygmail@.com', 'guywine@gmail.com__a','guywine@gmailcom']
