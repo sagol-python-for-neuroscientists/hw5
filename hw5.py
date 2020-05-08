@@ -18,7 +18,7 @@ class QuestionnaireAnalysis:
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        with open(self.data_fname, "r") as f:  # file is open for a brief period
+        with open(self.data_fname, "r") as f:
             data = eval(f.read())
         self.data=pd.DataFrame(data).replace('nan', np.NaN)
         return self.data
@@ -54,3 +54,22 @@ class QuestionnaireAnalysis:
         df_without_at_c=df_with_at[~df_with_at.email.str.contains("@c")].reset_index(drop=True)
         df_without_at_dot_c=df_without_at_c[~df_without_at_c.email.str.contains("@.c")].reset_index(drop=True)
         return df_without_at_dot_c
+    
+    def fill_na_with_mean(self) -> [pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+        The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+        Row indices of the students that their new grades were generated"""
+        
+        student=self.data[['q1','q2','q3','q4','q5']].isnull().any(axis=1).to_numpy()
+        student_ind=np.argwhere(student==1).flatten()
+        mean_value=self.data[['q1','q2','q3','q4','q5']].mean(axis=1,skipna=True)
+        self.data[['q1','q2','q3','q4','q5']]=self.data[['q1','q2','q3','q4','q5']].T.fillna(mean_value).T
+        return self.data, student_ind
+        
