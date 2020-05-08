@@ -75,7 +75,9 @@ class QuestionnaireAnalysis:
             Row indices of the students that their new grades were generated
             """
         # get arr: all indices of rows with NaN values
-        arr, _ = np.where(pd.isnull(self.data.loc[:,'q1':'q5']))
+        rows_with_nan, _ = np.where(pd.isnull(self.data.loc[:,'q1':'q5']))
+        arr = np.unique(rows_with_nan)
+
         # create a series with means by row
         m = self.data.loc[:,'q1':'q5'].mean(axis=1)
         # loop over columns q1:q5, fill NaN with mean
@@ -105,9 +107,21 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
-
+        # create a series with means by row
+        score = self.data.loc[:,'q1':'q5'].mean(axis=1)
+        # find the rows with >2 NaN
+        row_nan_count = pd.isnull(self.data.loc[:,'q1':'q5']).sum(axis=1)
+        rows_to_NA_bool = row_nan_count > maximal_nans_per_sub
+        # turn these rows in score to NaN
+        score.loc[rows_to_NA_bool] = np.nan
+        # set dtype to UInt8!
+        score_rounded_UInt8 = score.apply(np.floor).astype("UInt8")
+        # add "score" column to df       
+        df = self.data.copy()
+        df['score'] = score_rounded_UInt8
         
-    
+        return df
+  
 
     ####### q5 - bonus #######
     def correlate_gender_age(self) -> pd.DataFrame:
@@ -121,9 +135,25 @@ class QuestionnaireAnalysis:
             40 years of age, and the average score in each of the five questions.
         """
 
+
 q = QuestionnaireAnalysis(data_fname)
 q.read_data()
-q2 = q.remove_rows_without_mail()
-q3, arr = q.fill_na_with_mean()
 
-# emails = ['guy@gmail.com','@gmail.com','guy@gmail.', 'guy@gmail.co', 'guygmail.com', 'guygmail@.com', 'guywine@gmail.com__a','guywine@gmailcom']
+q2 = q.remove_rows_without_mail()
+q3, arr = q.fill_na_with_mean() 
+
+q_a = QuestionnaireAnalysis(data_fname)
+q_a.read_data()
+q4 = q_a.score_subjects()
+q4_more = q_a.score_subjects(0)
+q4_x = q_a.score_subjects(2)
+
+# a = pd.DataFrame({'A': ['A0', 'A1', 'A2', 'A3'],
+#                    'B': ['B0', 'B1', 'B2', 'B3'],
+#                   'C': ['C0', 'C1', 'C2', 'C3'],
+#                    'D': ['D0', 'D1', 'D2', 'D3']},
+#                  index=[0, 1, 2, 3])
+
+# e = pd.Series([1,2,3,4])
+
+# new = pd.concat([a,e],axis=1)
