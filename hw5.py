@@ -11,8 +11,9 @@ class QuestionnaireAnalysis:
         self.data = self.read_data()
 
     def read_data(self):
-        filepath = self.data_fname  
-        pd.read_json(filepath)
+        filepath = self.data_fname
+        df = pd.DataFrame.read_json(filepath)   
+        return df
 
 #Q1
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
