@@ -6,18 +6,19 @@ import matplotlib.pyplot as plt
 
 class QuestionnaireAnalysis:
     
-    def __init__(self, data_fname: Union[pathlib.Path, str])def __init__(self, data_fname):
+    def __init__(self, data_fname):
+    # def __init__(self, data_fname: Union[pathlib.Path, str]):
         self.data_fname = data_fname
         self.data = self.read_data()
 
     def read_data(self):
         filepath = self.data_fname
-        df = pd.DataFrame.read_json(filepath)   
+        df = pd.DataFrame(pd.read_json(filepath))   
         return df
 
 #Q1
-    def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
-
+    def show_age_distrib(self):
+    # def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         df = self.data
         hist, bins = np.histogram(df.age.dropna(), bins = [1,10,20,30,40,50,60,70,80,90,100])
         return (hist,bins)
@@ -35,8 +36,8 @@ class QuestionnaireAnalysis:
         return df
 
 #Q3
-    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]
-
+    # def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+    def fill_na_with_mean(self):
         df = self.data
         d_ans = df[['q1','q2','q3','q4','q5']] 
         NaN_only = d_ans.isnull().any(axis=0)
