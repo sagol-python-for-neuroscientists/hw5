@@ -6,8 +6,8 @@ import pathlib
 from typing import Union, Tuple
 import re
 
-data_fname = '/Users/guyweintraub/Desktop/Google Drive/קורסים/Python_course/hw5/data.json'
-data = pd.read_json(data_fname)
+fname = '/Users/guyweintraub/Desktop/Google Drive/קורסים/Python_course/hw5/data.json'
+
 
 class QuestionnaireAnalysis:
     """
@@ -16,7 +16,10 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = data_fname
+        if pathlib.Path(data_fname).exists():
+            self.data_fname = pathlib.Path(data_fname)
+        else:
+            raise ValueError('File was not found')
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -38,7 +41,7 @@ class QuestionnaireAnalysis:
         age_bins = list(range(0,101,10))
 
         fig1, ax1 = plt.subplots()
-        hist, bins, _ = ax1.hist(data['age'], bins=age_bins)
+        hist, bins, _ = ax1.hist(self.data['age'], bins=age_bins)
         ax1.set_xlabel('Age')
 
         return hist, bins
@@ -54,9 +57,9 @@ class QuestionnaireAnalysis:
             A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
             the (ordinal) index after a reset.
         """
-        pattern_valid = '[^@]+@[^@]+\.com$' # structure of valid email adress
-        email_filt = self.data['email'].str.match(pattern_valid) # series - boolean filter on rows
-        df = self.data[email_filt]
+        pattern_valid = r'[^@]+@[^@]+.[^@]' # structure of valid email adress
+        email_filt = self.data['email'].str.match(pattern_valid) # boolean filter on rows
+        df = self.data[email_filt] # filter data
         df.reset_index(drop=True, inplace=True)
         return df
 
@@ -134,27 +137,31 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
+        self.data['age_40'] = self.data['age']>=40
+        data_mi = self.data.set_index(['gender', 'age'], append=True) # create multi_index
+        data_mi = data_mi.loc[:,'q1':'age_40']
+        grouped = data_mi.groupby(['gender','age_40']).mean()
+
+        return grouped
 
 
-q = QuestionnaireAnalysis(data_fname)
-q.read_data()
-
-q2 = q.remove_rows_without_mail()
-q3, arr = q.fill_na_with_mean() 
-
-q_a = QuestionnaireAnalysis(data_fname)
-q_a.read_data()
-q4 = q_a.score_subjects()
-q4_more = q_a.score_subjects(0)
-q4_x = q_a.score_subjects(2)
 
 
-# a = pd.DataFrame({'A': ['A0', 'A1', 'A2', 'A3'],
-#                    'B': ['B0', 'B1', 'B2', 'B3'],
-#                   'C': ['C0', 'C1', 'C2', 'C3'],
-#                    'D': ['D0', 'D1', 'D2', 'D3']},
-#                  index=[0, 1, 2, 3])
 
-# e = pd.Series([1,2,3,4])
+# q = QuestionnaireAnalysis(fname)
+# q.read_data()
 
-# new = pd.concat([a,e],axis=1)
+# q2 = q.remove_rows_without_mail()
+
+# # q3, arr = q.fill_na_with_mean() 
+
+# q_a = QuestionnaireAnalysis(fname)
+# q_a.read_data()
+# q4 = q_a.score_subjects()
+# q4_more = q_a.score_subjects(0)
+# q4_x = q_a.score_subjects(2)
+
+# q_nofile = QuestionnaireAnalysis("blabl")
+
+#### q5
+# q5 = q.correlate_gender_age()
