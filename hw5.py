@@ -41,7 +41,7 @@ class QuestionnaireAnalysis:
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
         
-        data=pd.read_json(self.data_fname)
+        data=self.data
         data['email_check']=data['email']
         counter=0
         for i in data['email']:
@@ -54,13 +54,29 @@ class QuestionnaireAnalysis:
         return self.data
     
     def show_age_distrib(self):
-        data=pd.read_json(self.data_fname)
+        data=self.data
         binss =np.arange(0,110,10)
         self.ans=np.histogram(data['age'], bins=binss)
         return self.ans
 
+    def fill_na_with_mean(self):
+        df=self.data
+        df_imp=df.T.fillna(df.loc[:,'q1':'q5'].mean(axis=1)).T
+        inds = pd.isnull(df.loc[:,'q1':'q5']).any(1)
+        index=np.array(inds.index[inds == True])
+        self.ans=(df_imp,index)
+
+        return self.ans
 
 
+truth = np.load('tests_data/q3_fillna.npy')
+#df=pd.read_json('data.json')
+
+#inds = pd.isnull(df.loc[:,'q1':'q5']).any(1)
+#ans=np.array(inds.index[inds == True])
+
+print(truth)
+#print(ans.equals(truth))
 
 
 
