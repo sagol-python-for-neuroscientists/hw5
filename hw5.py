@@ -1,8 +1,8 @@
 import pathlib
 from typing import Union, Tuple
-import matplotlib.pyplot as plt
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 
 class QuestionnaireAnalysis:
@@ -20,7 +20,6 @@ class QuestionnaireAnalysis:
             raise ValueError(f"File {str(self.data_fname)} doesn't exist.")
         # If the path doesn’t exist and strict is True, FileNotFoundError is raised.
         self.data = self.read_data()
-        # TODO: delete self.data from init
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -103,12 +102,16 @@ class QuestionnaireAnalysis:
         data["score"] = score
         return data
 
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
 
-def main():
-    fname = 'data.json'
-    q = QuestionnaireAnalysis(fname)
-    print(q.score_subjects())
-
-
-if __name__ == '__main__':
-    main()
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with a MultiIndex containing the gender and whether the subject is above
+        40 years of age, and the average score in each of the five questions.
+        """
+        data = self.data.set_index(['gender', 'age'], append=True)
+        grouped_data = data.groupby([None, lambda age: age > 40], level=['gender', 'age'])
+        return grouped_data.mean().loc[:, 'q1':'q5']
