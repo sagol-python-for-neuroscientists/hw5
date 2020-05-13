@@ -1,6 +1,6 @@
 import pathlib
 from typing import Union, Tuple
-
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
@@ -11,29 +11,23 @@ class QuestionnaireAnalysis:
     Should be able to accept strings and pathlib.Path objects.
     """
 
-    @staticmethod
-    def valid_fname(file_name):
+    def __init__(self, data_fname: Union[pathlib.Path, str]):
         try:
-            file_name = pathlib.Path(file_name).resolve(strict=False)
-            # Make the path absolute
-            # If the path doesn’t exist and strict is True, FileNotFoundError is raised.
-            # TODO: Is FileNotFoundError instead of ValueError  okay?
+            self.data_fname = pathlib.Path(data_fname).resolve()
         except TypeError:
             raise
-        if not file_name.exists():
-            raise ValueError(f"File {str(file_name)} doesn't exist.")
-        return file_name
-
-    def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = self.valid_fname(data_fname)
+        if not self.data_fname.exists():
+            raise ValueError(f"File {str(self.data_fname)} doesn't exist.")
+        # If the path doesn’t exist and strict is True, FileNotFoundError is raised.
         self.data = self.read_data()
+        # TODO: delete self.data from init
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-
-        return pd.read_json(self.data_fname)
+        self.data = pd.read_json(self.data_fname)
+        return self.data
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
@@ -46,8 +40,9 @@ class QuestionnaireAnalysis:
           Bin edges
         """
 
-        bins = np.linspace(0, 100, 11)
-        return self.data.hist(column="age", bins=bins), bins
+        hist, bins = np.histogram(self.data["age"].dropna(), bins=np.linspace(0, 100, 11))
+        self.data.hist(column="age", bins=bins)
+        return hist, bins
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
@@ -76,11 +71,43 @@ class QuestionnaireAnalysis:
         q_columns = self.data.filter(items=['q1', 'q2', 'q3', 'q4', 'q5'])
         return self.data.fillna(self.data.mean()['q1':'q5']), self.data[q_columns.isnull().any(axis=1)].index.to_numpy()
 
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+        data = self.data
+        bool_data = data.loc[:, 'q1':'q5'].isnull().sum(axis=1) > maximal_nans_per_sub
+        score = np.zeros(shape=[len(data), 1])
+        score[bool_data] = np.nan
+        # Where bool_data is True --> set value as nan
+        score[bool_data == False, 0] = data.loc[bool_data == False, 'q1':'q5'].mean(axis=1)
+        score = np.round(score - 0.5).flatten()
+        # Since np rounds up toward the nearest integer, we deduct 0.5 elementwise -as a way to round down each element.
+        score = pd.Series(score, dtype='UInt8')
+        #  Pandas uses NA as its missing value, rather than numpy.nan.
+        data["score"] = score
+        return data
+
 
 def main():
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
-    print(q.fill_na_with_mean())
+    print(q.score_subjects())
 
 
 if __name__ == '__main__':
