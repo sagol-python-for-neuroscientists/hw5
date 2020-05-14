@@ -71,7 +71,8 @@ class QuestionnaireAnalysis:
         df_q = df.loc[:, 'q1':'q5']
         rows,columns = np.where(df_q.isna())
         rows = np.unique(rows)
-        df_q = df_q.fillna(df_q.mean(axis=1))
+        means = df_q.mean(axis=1)
+        df_q = df_q.T.fillna(means[rows], axis = 0).T
         df.loc[:, 'q1':'q5'] = df_q
         
         return df , rows
