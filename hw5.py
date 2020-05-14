@@ -4,6 +4,8 @@ import numpy as np
 from typing import Union
 import json
 import matplotlib.pyplot as plt
+import re
+from typing import Tuple
 
 
 class QuestionnaireAnalysis:
@@ -15,9 +17,6 @@ class QuestionnaireAnalysis:
     def __init__(self, data_fname: Union[pathlib.Path, str]):
         self.data_fname = data_fname 
         self.data = pd.DataFrame()
-        #self.uniques = []  
-        #self.duplicates = {} 
-        #self.listall = []
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -25,8 +24,9 @@ class QuestionnaireAnalysis:
         """
         with open(self.data_fname) as f:
             self.data = pd.DataFrame(json.load(f))
+        self.data.replace(['None', 'nan'], np.nan, inplace=True)
 
-    def show_age_distrib(self):#-> tuple[np.ndarray, np.ndarray]:
+    def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
 
         Returns
@@ -37,14 +37,12 @@ class QuestionnaireAnalysis:
         Bin edges
         """
         QuestionnaireAnalysis.read_data(self)
-        series_age = pd.Series(self.data['age'].values) 
-        series_age = pd.to_numeric(series_age.astype(str).str[:3], errors='coerce')
-        series_age = series_age.dropna()
-        bins = np.linspace(0, 100, 10)
-        age_dis = (plt.hist(series_age, bins))
+        self.data.hist(column='age', bins = 10, range=(0,100))
         plt.show()
-        print(self.data)
-        return(age_dis)
+        hist, bins = np.histogram(self.data['age'], bins = 10, range=(0,100))
+        agetup = (hist,bins)
+        return (agetup)
+        
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
@@ -56,16 +54,27 @@ class QuestionnaireAnalysis:
         the (ordinal) index after a reset.
         """
         QuestionnaireAnalysis.read_data(self)
-        #validcode = (self.data['email'].str.contains('@')) & (self.data['email'].str.contains('.'))
-        #regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
-        #self.data.query((self.data['email'].str.contains('@')) & (self.data['email'].str.contains('.')))
-        #print(self.data[~(self.data['email'].str.contains("@")) | ~(self.data['email'].str.contains("."))])
-        self.data.drop(self.data[~(self.data['email'].str.contains("@")) | ~(self.data['email'].str.contains("."))] , inplace=True)
-        print(self.data)
+        df = self.data[(self.data['email'].str.contains('@') & (self.data['email'].str.contains('.')) == True)]
+        df.reset_index(inplace = True)
+        return (df)
+
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+    """Finds, in the original DataFrame, the subjects that didn't answer
+    all questions, and replaces that missing value with the mean of the
+    other grades for that student.
+
+    Returns
+    -------
+    df : pd.DataFrame
+    The corrected DataFrame after insertion of the mean grade
+    arr : np.ndarray
+    Row indices of the students that their new grades were generated
+    """
         
 
 if __name__ == "__main__":
     myfile = QuestionnaireAnalysis('C:/Dev/hw5/data.json')
     #myfile.read_data()
     #myfile.show_age_distrib()
-    myfile.remove_rows_without_mail()
+    #myfile.remove_rows_without_mail()
+    myfile.fill_na_with_mean()
