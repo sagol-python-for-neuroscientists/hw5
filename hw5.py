@@ -67,16 +67,17 @@ class QuestionnaireAnalysis:
         self.ans=(df_imp,index)
 
         return self.ans
+    def score_subjects(self):
 
+        df= self.data
+        df['score']=df.loc[:,'q1':'q5'].mean(axis=1).apply(np.floor).astype("UInt8")
+        df['nacount']=df.loc[:,'q1':'q5'].isnull().sum(axis=1)
+        df.loc[df['nacount']>1, 'score'] = np.nan
+        del df['nacount']
+        self.data=df
 
-truth = np.load('tests_data/q3_fillna.npy')
-#df=pd.read_json('data.json')
+        return self.data
 
-#inds = pd.isnull(df.loc[:,'q1':'q5']).any(1)
-#ans=np.array(inds.index[inds == True])
-
-print(truth)
-#print(ans.equals(truth))
 
 
 
