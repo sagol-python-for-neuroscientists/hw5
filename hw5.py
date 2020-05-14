@@ -38,6 +38,7 @@ class QuestionnaireAnalysis:
         bins : np.ndarray
             Bin edges
             """
+        self.read_data()
         bin_edges = np.arange(0, 110, 10)
         ax = self.data.hist(column="age", bins=bin_edges)
         hist, bins = np.histogram(self.data.age.dropna().values, bins=bin_edges)
@@ -46,7 +47,7 @@ class QuestionnaireAnalysis:
 
     def check_email(self, email: str):
         # regex = "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w)+$"
-        regex = "[^@]+@[^@]+\.[^@]+"
+        regex = r"[^@]+@[^@]+\.[^@]+"
         flag = False
         if re.search(regex, email):
             flag = True
@@ -61,6 +62,7 @@ class QuestionnaireAnalysis:
             A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
             the (ordinal) index after a reset.
         """
+        self.read_data()
         df = self.data.copy()
         for i in df.index:
             if not self.check_email(df.email[i]):
@@ -106,6 +108,7 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
+        self.read_data()
         df = self.data.copy()
         scores_df = df.loc[:, "q1":"q5"]
         scores_df["score"] = scores_df.mean(axis=1).apply(np.floor)
@@ -124,10 +127,11 @@ class QuestionnaireAnalysis:
         A DataFrame with a MultiIndex containing the gender and whether the subject is above
         40 years of age, and the average score in each of the five questions.
     """
-        df = self.data.copy()
-        rel_df = df.set_index(["age", "gender"], append=True)
-        rel_df.groupby(["age", "gender"]).filter(lambda x: x > 40)
-        rel_df = rel_df.loc[:, "q1":"q5"]
-        rel_df = pd.melt(
-            df, id_vars=["age", "gender"], value_vars=["q1", "q2", "q3", "q4", "q5"]
-        )
+        self.read_data()
+        df, arr = self.fill_na_with_mean()
+        rel_df = df.drop("id", axis=1)
+        rel_df["index"] = rel_df.index
+        below_40_df = rel_df.groupby(
+            ["index", "gender", "age", lambda x: rel_df["age"][x] < 40]
+        ).mean()
+        return below_40_df
