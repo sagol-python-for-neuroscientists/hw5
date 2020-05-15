@@ -120,20 +120,16 @@ class QuestionnaireAnalysis:
             40 years of age, and the average score in each of the five questions.
         """
         df = self.data
+        df_e = df[~df['age'].isna()]
         df_g = df.loc[:,['gender','q1','q2','q3','q4','q5']]
-        df_g['age'] = df['age']>40 
+        df_g['age'] = df['age'] > 40 
         by_age_gender = df_g.groupby(['gender','age']).mean()
         num_ind = np.arange(len(by_age_gender))
         by_age_gender.set_index(num_ind, append=True, inplace=True)
         multi_ind = by_age_gender.index.swaplevel(1,2).swaplevel(0,1).rename(['row_num', 'gender', 'age'])
-        by_age_gender.set_index(multi_ind, inplace = True)     
+        by_age_gender.set_index(multi_ind, inplace = True)
+        by_age_gender.plot.bar()
+        plt.show()     
         
         return by_age_gender 
-                
-
-
-        
-
-
-        
-
+            
