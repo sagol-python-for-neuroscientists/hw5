@@ -122,16 +122,12 @@ class QuestionnaireAnalysis:
         df = self.data
         df_g = df.loc[:,['gender','q1','q2','q3','q4','q5']]
         df_g['age'] = df['age']>40 
-        grouped_by_age_gender = df_g.groupby(['gender','age'])
-        final_df = grouped_by_age_gender.mean()
-        by_age_gender = pd.DataFrame(final_df)
+        by_age_gender = df_g.groupby(['gender','age']).mean()
         num_ind = np.arange(len(by_age_gender))
         by_age_gender.set_index(num_ind, append=True, inplace=True)
-        multi_ind = by_age_gender.index.swaplevel(1,2).swaplevel(0,1)
-        by_age_gender.set_index(multi_ind)     
-        by_age_gender.plot.bar(rot = 0)
-        plt.show()
-
+        multi_ind = by_age_gender.index.swaplevel(1,2).swaplevel(0,1).rename(['row_num', 'gender', 'age'])
+        by_age_gender.set_index(multi_ind, inplace = True)     
+        
         return by_age_gender 
                 
 
