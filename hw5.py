@@ -22,7 +22,8 @@ class QuestionnaireAnalysis:
 
         df = self.data
         hist, bins = np.histogram(df['age'], bins = [0,10,20,30,40,50,60,70,80,90,100])
-        return hist, bins
+        return (hist, bins)
+
 #Q2
     def remove_rows_without_mail(self) -> pd.DataFrame:
 
@@ -38,7 +39,7 @@ class QuestionnaireAnalysis:
         idxval = df.dropna(subset = ['q1','q2','q3','q4','q5']).index.values
         arr = np.array([i for i in list(df.index.values) if i not in idxval]) 
         df.loc[:,['q1','q2','q3','q4','q5']] =  df.loc[:,['q1','q2','q3','q4','q5']].fillna(mean_row[arr],axis=0)
-        return df , arr
+        return (df , arr)
 
 #Q4
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
@@ -49,5 +50,14 @@ class QuestionnaireAnalysis:
             df_temp.loc[i,:] = df_temp.loc[i,:].fillna(m, limit = 1)
         df['score'] = df_temp.mean(skipna=False, axis=1).apply(np.floor).astype('UInt8')
         return df
-        
+    
+#Q5
+    def correlate_gender_age(self) -> pd.DataFrame:
+        df = self.data
+        df_filtered = df.loc[:,['gender','age','q1','q2','q3','q4','q5']]
+        df_filtered['age'].fillna(df_filtered['age'].mean(), inplace=True)
+        df_filtered['age'] = df_filtered['age'] > 40 
+
+        grouped = df_filtered.groupby(['gender','age'] , as_index=False).mean()
+        return grouped
 
