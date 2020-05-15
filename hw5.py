@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 class QuestionnaireAnalysis:
     """
@@ -124,6 +125,8 @@ class QuestionnaireAnalysis:
         grouped_by_age_gender = df_g.groupby(['gender','age'])
         final_df = grouped_by_age_gender.mean()
         by_age_gender = pd.DataFrame(final_df)
+        by_age_gender.plot.bar(rot = 0)
+        plt.show()
 
         return by_age_gender 
                 
