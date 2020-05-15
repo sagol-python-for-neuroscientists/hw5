@@ -16,7 +16,7 @@ class QuestionnaireAnalysis:
     def __init__(self, data_fname: Union[pathlib.Path, str]):
         self.data_fname=pathlib.Path(data_fname).resolve()
         if not self.data_fname.exists():
-            raise ValueError("files does not exist")
+            raise ValueError("file does not exist")
         # ...
 
     def read_data(self):
