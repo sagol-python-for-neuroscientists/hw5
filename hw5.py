@@ -111,7 +111,7 @@ class QuestionnaireAnalysis:
         df.loc[index4,'q4']=df.loc[index4,['q1', 'q2','q3','q5']].mean(axis=1)
         df.loc[index5,'q5']=df.loc[index5,['q1', 'q2','q3','q4']].mean(axis=1)
 
-        return  df,list_indices 
+        return  tuple([df,list_indices])
 
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
