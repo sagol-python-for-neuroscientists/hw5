@@ -14,7 +14,7 @@ class QuestionnaireAnalysis:
     def __init__(self, data_fname: Union[pathlib.Path, str]):
         try:
             self.data_fname = pathlib.Path(data_fname).resolve()
-        except TypeError:
+        except TypeError("Please provide a path"):
             raise
         if not self.data_fname.exists():
             raise ValueError(f"File {str(self.data_fname)} doesn't exist.")
