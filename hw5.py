@@ -34,7 +34,6 @@ class QuestionnaireAnalysis:
         Bin edges
         """
         age = self.data['age']
-        age = age.dropna()
         hist, bins = np.histogram(age, bins = [0,10,20,30,40,50,60,70,80,90,100])
         plt.hist(age, bins = bins)
         plt.show()
@@ -123,10 +122,6 @@ class QuestionnaireAnalysis:
         df_g = df.loc[:,['gender','q1','q2','q3','q4','q5']]
         df_g['age'] = df['age'] > 40 
         by_age_gender = df_g.groupby(['gender','age']).mean()
-        num_ind = np.arange(len(by_age_gender))
-        by_age_gender.set_index(num_ind, append=True, inplace=True)
-        multi_ind = by_age_gender.index.swaplevel(1,2).swaplevel(0,1).rename(['row_num', 'gender', 'age'])
-        by_age_gender.set_index(multi_ind, inplace = True)
         ax = by_age_gender.plot.bar(title = "Average question results for different groups of participants (True means above 40)")
         ax.set_xlabel("Group")
         ax.set_ylabel("Grade score")
