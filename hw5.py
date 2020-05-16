@@ -19,7 +19,6 @@ class QuestionnaireAnalysis:
         if not self.data_fname.exists():
             raise ValueError(f"File {str(self.data_fname)} doesn't exist.")
         # If the path doesn’t exist and strict is True, FileNotFoundError is raised.
-        self.data = self.read_data()
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -52,7 +51,8 @@ class QuestionnaireAnalysis:
       A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
       the (ordinal) index after a reset.
         """
-        email_pattern = self.data[self.data["email"].str.match(r"\w+\S*@{1}\w+.\w")]  # Using RegEx
+        email_pattern = self.data[
+            self.data["email"].str.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")]  # Using RegEx
         return email_pattern.reset_index(drop=True)
 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
@@ -90,11 +90,11 @@ class QuestionnaireAnalysis:
             A new DF with a new column - "score".
         """
         data = self.data
-        bool_data = data.loc[:, 'q1':'q5'].isnull().sum(axis=1) > maximal_nans_per_sub
+        bool_data = data.loc[:, "q1":"q5"].isnull().sum(axis=1) > maximal_nans_per_sub
         score = np.zeros(shape=[len(data), 1])
         score[bool_data] = np.nan
         # Where bool_data is True --> set value as nan
-        score[bool_data == False, 0] = data.loc[bool_data == False, 'q1':'q5'].mean(axis=1)
+        score[bool_data == False, 0] = data.loc[bool_data == False, "q1":"q5"].mean(axis=1)
         score = np.round(score - 0.5).flatten()
         # Since np rounds up toward the nearest integer, we deduct 0.5 elementwise -as a way to round down each element.
         score = pd.Series(score, dtype='UInt8')
@@ -112,6 +112,6 @@ class QuestionnaireAnalysis:
         A DataFrame with a MultiIndex containing the gender and whether the subject is above
         40 years of age, and the average score in each of the five questions.
         """
-        data = self.data.set_index(['gender', 'age'], append=True)
-        grouped_data = data.groupby([None, lambda age: age > 40], level=['gender', 'age'])
-        return grouped_data.mean().loc[:, 'q1':'q5']
+        data = self.data.set_index(["gender", "age"], append=True)
+        grouped_data = data.groupby([None, lambda age: age > 40], level=["gender", "age"])
+        return grouped_data.mean().loc[:, "q1":"q5"]
