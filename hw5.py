@@ -102,5 +102,27 @@ class QuestionnaireAnalysis:
             i=i+1
         self.data['score']=self.data['score'].apply(np.floor).astype('UInt8')
         return self.data
+    
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with a MultiIndex containing the gender and whether the subject is above
+            40 years of age, and the average score in each of the five questions.
+        """
+        self.data['age']=self.data['age'].fillna(self.data['age'].mean())
+        i=0
+        for row in self.data['age']:
+            if row>=40:
+                self.data['age'].iloc[i]=True
+            else:
+                self.data['age'].iloc[i]=False
+            i=i+1
+        df=self.data.set_index(['gender', 'age'], append=True)
+        grouped = df.groupby(level=[1,2]).mean().drop(columns=['id'])
+        return grouped
 
         
