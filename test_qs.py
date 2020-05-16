@@ -73,7 +73,7 @@ def test_fillna_rows():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     _, rows = q.fill_na_with_mean()
-    assert np.array_equal(truth, rows)
+    df.equals(truth)
 
 
 def test_fillna_df():
