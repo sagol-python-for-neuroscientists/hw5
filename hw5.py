@@ -201,12 +201,14 @@ class QuestionnaireAnalysis:
     #transform age to true or false (above 40 or not)
     #group by gender and age
     #check average score per group
-        df, __ = self.fill_na_with_mean()
         q_cols = ['q1','q2','q3','q4','q5']
+        df = self.read_data()
+        df[q_cols] = self.extract_column(q_cols)
         df['age'] = self.extract_column('age')
-        df['age'] = np.where(df['age'] > 40, True, False)
-        df = df.set_index([df.index.values,'gender','age'])
-        df = df.groupby(['gender','age'])[q_cols].mean() #avearges do not come out right
+        df['age'] = df['age'].fillna(df['age'].mean())
+        df['age'] = df['age'] > 40
+        df = df.groupby(['gender','age'])[q_cols].mean().reset_index()
+        df = df.set_index([df.index,'gender','age'])
 
         return df
 
