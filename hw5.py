@@ -130,8 +130,8 @@ class QuestionnaireAnalysis:
         self.read_data()
         df, arr = self.fill_na_with_mean()
         rel_df = df.drop("id", axis=1)
-        rel_df["index"] = rel_df.index
-        below_40_df = rel_df.groupby(
-            ["index", "gender", "age", lambda x: rel_df["age"][x] < 40]
-        ).mean()
+        rel_df["under_40"] = rel_df["age"] < 40
+        rel_df = rel_df.drop("age", axis=1)
+        below_40_df = rel_df.groupby(["gender", "under_40"]).mean()
+        below_40_df.index.names = ["gender", "age"]
         return below_40_df
