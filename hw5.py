@@ -207,8 +207,9 @@ class QuestionnaireAnalysis:
         df['age'] = self.extract_column('age')
         df['age'] = df['age'].fillna(df['age'].mean())
         df['age'] = df['age'] > 40
-        df = df.groupby(['gender','age'])[q_cols].mean().reset_index()
         df = df.set_index([df.index,'gender','age'])
+        df = df.groupby(['gender','age'])[q_cols].mean()
+        
 
         return df
 
