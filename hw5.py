@@ -15,18 +15,15 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        #self.data_fname = data_fname 
-        #self.data = pd.DataFrame()
-        #try:
-        if data_fname is str:
-            data_fname = Path(data_fname)
+        if isinstance(data_fname, str):
+            data_fname = pathlib.Path(data_fname)
+        if data_fname.exists() and data_fname.is_file():
+            self.data_fname = data_fname 
+            self.data = pd.DataFrame()
         else:
-            if data_fname.exists():
-                self.data_fname = data_fname 
-                self.data = pd.DataFrame()
-            else:
-                print('not access to the file')
-                pass
+            print('not access to the file')
+            pass
+
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -115,7 +112,7 @@ class QuestionnaireAnalysis:
         return (newdf)
         
 if __name__ == "__main__":
-    myfile = QuestionnaireAnalysis('C:/Dev/hw5/data.json')
+    myfile = QuestionnaireAnalysis('C:/nk.json')
     #myfile.score_subjects()
   #  myfile.read_data()
   #  myfile.show_age_distrib()
