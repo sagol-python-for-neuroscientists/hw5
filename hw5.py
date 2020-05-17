@@ -58,6 +58,6 @@ class QuestionnaireAnalysis:
         df_filtered['age'].fillna(df_filtered['age'].mean(), inplace=True)
         df_filtered['age'] = df_filtered['age'] > 40 
 
-        grouped = df_filtered.groupby(['gender','age'] , as_index=False).mean()
+        grouped = df_filtered.groupby(['gender','age'] , as_index=True).mean()
         return grouped
 
