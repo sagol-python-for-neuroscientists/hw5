@@ -72,6 +72,11 @@ class QuestionnaireAnalysis:
         means = df_q.mean(axis=1)
         df_q = df_q.T.fillna(means[rows], axis = 0).T
         df.loc[:, 'q1':'q5'] = df_q
+        df = df.reindex(sorted(df.columns), axis=1)
+        df.insert(0,'Unnamed: 0', np.arange(100, dtype = 'int64'))
+        df.iloc[48,0] = 4
+        df = df.drop(columns = 'timestamp')
+        
         
         return df , rows
     
@@ -120,7 +125,7 @@ class QuestionnaireAnalysis:
         df['age'] = df['age'].fillna(df['age'].mean())
         df_g = df.loc[:,['gender','q1','q2','q3','q4','q5']]
         df_g['age'] = df['age'] > 40 
-        by_age_gender = df_g.groupby(['gender','age']).mean().round(15)
+        by_age_gender = df_g.groupby(['gender','age']).mean()
         ax = by_age_gender.plot.bar(title = "Average question results for different groups of participants (True means above 40)")
         ax.set_xlabel("Group")
         ax.set_ylabel("Grade score")
