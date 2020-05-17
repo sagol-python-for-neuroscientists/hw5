@@ -11,9 +11,18 @@ class QuestionnaireAnalysis:
     def __init__(self, data_fname):
         # ...
         if type(data_fname)==str:
-            self.data_fname=pathlib.Path(data_fname)
+            if pathlib.Path(data_fname).is_file():
+                self.data_fname=pathlib.Path(data_fname)
+            else:
+                raise ValueError('missing file')
+        elif type(data_fname)==pathlib.WindowsPath:
+            if data_fname.is_file():
+                self.data_fname=(data_fname)
+            else:
+                raise ValueError('missing file')
         else:
-            self.data_fname=(data_fname)
+            raise ValueError('worg file type')
+
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -24,6 +33,23 @@ class QuestionnaireAnalysis:
             info=json.load(json_file)
             self.data=pd.DataFrame(info)
         return self
+
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+	Returns
+	-------
+	df : pd.DataFrame
+	  A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+	  the (ordinal) index after a reset.
+        """
+        at_mask=self.data['email'].str.contains('@',regex=False)
+        point_mask=self.data['email'].str.contains('.',regex=False)
+        last_char=self.data['email'].str[-1]
+        suffix_mask=last_char.str.contains('.',regex=False)
+        mask=at_mask*point_mask*(~suffix_mask)
+        without_mail=self.data[mask]
+        return without_mail
 
     def show_age_distrib(self):
         """Calculates and plots the age distribution of the participants.
@@ -43,10 +69,6 @@ class QuestionnaireAnalysis:
         return (counts, bins)      
 
 
-
-
-
-
     def fill_na_with_mean(self):
         """Finds, in the original DataFrame, the subjects that didn't answer
         all questions, and replaces that missing value with the mean of the
@@ -59,9 +81,14 @@ class QuestionnaireAnalysis:
         arr : np.ndarray
         Row indices of the students that their new grades were generated
         """
-        index = self.data['q1':'q5'].index[self.data['q1':'q5'].apply(np.isnan)]
-        self.data['q1':'q5'].fillna(self.data['q1':'q5'].mean()) 
-        return (self, index)
+        scores=self.data[['q1','q2','q3','q4','q5']]
+        nan_mask=scores=='nan'
+        mask=nan_mask.sum(axis=1)
+        ind = self.data.index[mask>0]
+        corected_scores=scores
+        corected_scores[nan_mask]=np.nan
+        corected_scores=corected_scores.fillna(corected_scores.mean()) 
+        return (corected_scores, np.array(ind))
 
     
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
@@ -83,15 +110,22 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
-        nan_mask=self.data['q1':'q5'].isnan().sum>maximal_nans_per_sub
-        self.data['score']=self.data['q1':'q5'].mean()
-        self.data['score'][nan_mask]= 'NA'
-        a=1
-        return self
+        qs=self.data[['q1','q2','q3','q4','q5']]
+        is_nan_mask=qs=='nan'
+        qs[is_nan_mask]=np.nan
+        mask=is_nan_mask.sum(axis=1)
+        thresh_nan_mask=mask<=maximal_nans_per_sub
+        new_df=self.data
+        new_df['score']=np.nan
+        means=pd.to_numeric(qs.mean(axis=1).apply(np.floor),downcast='unsigned')
+        new_df['score'][thresh_nan_mask]=means
+        new_df['score']=pd.Series(new_df['score'],dtype='UInt8')
+        return new_df
 
 
 if __name__ == "__main__":
     test=QuestionnaireAnalysis('data.json')
+    test.read_data()
     counts, bins=test.show_age_distrib()
     print(counts)
     print(bins)
