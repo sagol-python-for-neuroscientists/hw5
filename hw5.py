@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import re
 from typing import Tuple
 import math
+import sys
 
 class QuestionnaireAnalysis:
     """
@@ -21,8 +22,8 @@ class QuestionnaireAnalysis:
             self.data_fname = data_fname 
             self.data = pd.DataFrame()
         else:
-            print('not access to the file')
-            pass
+            print('file not accessible')
+            raise ValueError
 
 
     def read_data(self):
@@ -110,11 +111,3 @@ class QuestionnaireAnalysis:
         newdf['score'] = newdf.loc[:, 'q1':'q5'].mean(axis = 1, skipna = True).where(newdf.loc[:, 'q1':'q5'].isnull().sum(axis=1) <= maximal_nans_per_sub)
         newdf['score'] = newdf['score'].apply(np.floor).astype('UInt8')
         return (newdf)
-        
-if __name__ == "__main__":
-    myfile = QuestionnaireAnalysis('C:/nk.json')
-    #myfile.score_subjects()
-  #  myfile.read_data()
-  #  myfile.show_age_distrib()
-   # myfile.remove_rows_without_mail()
-   # myfile.fill_na_with_mean()
