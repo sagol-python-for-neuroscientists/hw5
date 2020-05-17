@@ -86,6 +86,7 @@ class QuestionnaireAnalysis:
         nan_mask=self.data['q1':'q5'].isnan().sum>maximal_nans_per_sub
         self.data['score']=self.data['q1':'q5'].mean()
         self.data['score'][nan_mask]= 'NA'
+        a=1
         return self
 
 
