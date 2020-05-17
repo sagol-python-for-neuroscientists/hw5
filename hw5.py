@@ -106,5 +106,5 @@ class QuestionnaireAnalysis:
         """
         df=self.data
         index_df = df.set_index([df.index, 'age', 'gender']) #a
-        index_df['over_40'] =  index_df.index.get_level_values(1)>40
-        return index_df.groupby(['gender', 'over_40']).mean()
+        grouped=index_df.groupby([None, lambda age: age>40], level=['gender','age']).mean().loc[:,'q1':'q5']
+        return grouped
