@@ -1,4 +1,4 @@
-import pathlib
+import pathlib 
 import pandas as pd
 import numpy as np
 from typing import Union
@@ -6,7 +6,7 @@ import json
 import matplotlib.pyplot as plt
 import re
 from typing import Tuple
-
+import math
 
 class QuestionnaireAnalysis:
     """
@@ -15,8 +15,18 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = data_fname 
-        self.data = pd.DataFrame()
+        #self.data_fname = data_fname 
+        #self.data = pd.DataFrame()
+        #try:
+        if data_fname is str:
+            data_fname = Path(data_fname)
+        else:
+            if data_fname.exists():
+                self.data_fname = data_fname 
+                self.data = pd.DataFrame()
+            else:
+                print('not access to the file')
+                pass
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
@@ -54,27 +64,60 @@ class QuestionnaireAnalysis:
         the (ordinal) index after a reset.
         """
         QuestionnaireAnalysis.read_data(self)
-        df = self.data[(self.data['email'].str.contains('@') & (self.data['email'].str.contains('.')) == True)]
-        df.reset_index(inplace = True)
+        df = self.data[(self.data['email'].str.contains(r'[^@]+@[^@]+\.[^@]+') == True)]
+        df.reset_index(inplace = True, drop=True)
         return (df)
 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
-    """Finds, in the original DataFrame, the subjects that didn't answer
-    all questions, and replaces that missing value with the mean of the
-    other grades for that student.
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
 
-    Returns
-    -------
-    df : pd.DataFrame
-    The corrected DataFrame after insertion of the mean grade
-    arr : np.ndarray
-    Row indices of the students that their new grades were generated
-    """
+        Returns
+        -------
+        df : pd.DataFrame
+        The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+        Row indices of the students that their new grades were generated
+        """
+        QuestionnaireAnalysis.read_data(self)
+        arr = []
+        df = self.data.copy()
+        df['mean'] = df.loc[:, 'q1':'q5'].mean(axis = 1, skipna = True)
+        df.loc[:, 'q1':'q5'] = df.loc[:, 'q1':'q5'].T.fillna(df['mean']).T
+        df.drop('mean', axis=1, inplace=True)
+        arr = self.data.loc[pd.isna(self.data['q1']) | pd.isna(self.data['q2']) | pd.isna(self.data['q3']) | pd.isna(self.data['q4']) | pd.isna(self.data['q5']), :].index.values
+        return (df,arr)
         
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
 
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+        Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+        A new DF with a new column - "score".
+        """
+        QuestionnaireAnalysis.read_data(self)
+        newdf = self.data.copy()
+        newdf['score'] = newdf.loc[:, 'q1':'q5'].mean(axis = 1, skipna = True).where(newdf.loc[:, 'q1':'q5'].isnull().sum(axis=1) <= maximal_nans_per_sub)
+        newdf['score'] = newdf['score'].apply(np.floor).astype('UInt8')
+        return (newdf)
+        
 if __name__ == "__main__":
     myfile = QuestionnaireAnalysis('C:/Dev/hw5/data.json')
-    #myfile.read_data()
-    #myfile.show_age_distrib()
-    #myfile.remove_rows_without_mail()
-    myfile.fill_na_with_mean()
+    #myfile.score_subjects()
+  #  myfile.read_data()
+  #  myfile.show_age_distrib()
+   # myfile.remove_rows_without_mail()
+   # myfile.fill_na_with_mean()
