@@ -73,13 +73,12 @@ class QuestionnaireAnalysis:
         df_q = df_q.T.fillna(means[rows], axis = 0).T
         df.loc[:, 'q1':'q5'] = df_q
         """The following part is written as a workaround, due to a bug in the test_data file
-        connected to this question
+        connecte to this question 
         """
         df = df.reindex(sorted(df.columns), axis=1) 
         df.insert(0,'Unnamed: 0', np.arange(100, dtype = 'int64'))
         df.iloc[48,0] = 4
-        df = df.drop(columns = 'timestamp')
-        
+        df = df.drop(columns = 'timestamp')       
         
         return df , rows
     
