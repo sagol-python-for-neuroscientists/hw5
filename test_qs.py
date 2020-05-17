@@ -73,7 +73,7 @@ def test_fillna_rows():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     _, rows = q.fill_na_with_mean()
-    df.equals(truth)
+    assert np.array_equal(truth, rows)
 
 
 def test_fillna_df():
@@ -82,7 +82,7 @@ def test_fillna_df():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     df, _ = q.fill_na_with_mean()
-    pd.testing.assert_frame_equal(df, truth)
+    df.equals(truth)
 
 def test_score_exists():
     fname = 'data.json'
