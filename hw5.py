@@ -122,6 +122,25 @@ class QuestionnaireAnalysis:
         new_df['score']=pd.Series(new_df['score'],dtype='UInt8')
         return new_df
 
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
+
+	Returns
+	-------
+	pd.DataFrame
+        A DataFrame with a MultiIndex containing the gender and whether the subject is above
+	    40 years of age, and the average score in each of the five questions.
+    """
+        self.data['age'][self.data['age']=='nan']=np.nan
+        self.data['over_40']=self.data['age']>40
+        temp=self.data.set_index([self.data.index, 'gender', 'over_40'])
+        qs=temp[['q1','q2','q3','q4','q5']]
+        is_nan_mask=qs=='nan'
+        qs[is_nan_mask]=np.nan
+        qs=qs.fillna(qs.mean()) 
+        new_df=qs.groupby(level=['gender','over_40']).mean()
+        return new_df
 
 if __name__ == "__main__":
     test=QuestionnaireAnalysis('data.json')
