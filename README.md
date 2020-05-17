@@ -108,6 +108,8 @@ The following questions should be answered by writing additional method(s) that 
 
     c. Return the DataFrame containing the average result per question per group.
 
+    NOTE: Due to an error on my behalf, this question may be submitted by Thursday night, 21.5 at 23:59.
+    
     ```python
     def correlate_gender_age(self) -> pd.DataFrame:
         """Looks for a correlation between the gender of the subject, their age
