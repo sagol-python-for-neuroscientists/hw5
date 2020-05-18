@@ -54,7 +54,8 @@ class QuestionnaireAnalysis:
 
     def correlate_gender_age(self) -> pd.DataFrame:
         by_groups = self.data[['age', 'gender', 'q1', 'q2', 'q3', 'q4', 'q5']]
-        age_condition = by_groups['age'] >= 40
+        replace_nan = by_groups['age'].replace(np.nan, 50)
+        age_condition = (replace_nan >= 40)
         by_groups['age'] = age_condition
         final = by_groups.groupby(['gender', 'age']).mean()
         return final
