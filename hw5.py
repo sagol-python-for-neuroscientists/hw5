@@ -39,7 +39,6 @@ class QuestionnaireAnalysis:
         idxval = df.dropna(subset = ['q1','q2','q3','q4','q5']).index.values
         arr = np.array([i for i in list(df.index.values) if i not in idxval]) 
         df.loc[:,['q1','q2','q3','q4','q5']] =  df.loc[:,['q1','q2','q3','q4','q5']].fillna(mean_row[arr],axis=0)
-        print(df)
         return (df , arr)
 
 
@@ -59,5 +58,5 @@ class QuestionnaireAnalysis:
         df_filtered = df.loc[:,['gender','age','q1','q2','q3','q4','q5']]
         df_filtered['age'] = df_filtered['age'].dropna() > 40 
         grouped = df_filtered.groupby(['gender','age'] , as_index=True).mean()
-        print(grouped)
+        return grouped
 
