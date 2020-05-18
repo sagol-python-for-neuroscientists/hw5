@@ -122,7 +122,7 @@ class QuestionnaireAnalysis:
         cols_to_change = ['q1','q2','q3','q4','q5']
         df[cols_to_change] = all_questions
 
-        return df, generated_grades
+        return df,generated_grades
     
     '''
         4. Each participants should receive an integer score for his or her answers, 
@@ -212,5 +212,3 @@ class QuestionnaireAnalysis:
         
 
         return df
-
-    
