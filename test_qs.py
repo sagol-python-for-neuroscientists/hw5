@@ -116,4 +116,4 @@ def test_correlation():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     df = q.correlate_gender_age()
-    df.equals(truth)
+    pd.testing.assert_frame_equal(df, truth)
