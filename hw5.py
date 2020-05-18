@@ -55,9 +55,8 @@ class QuestionnaireAnalysis:
     def correlate_gender_age(self) -> pd.DataFrame:
         df = self.data
         df_filtered = df.loc[:,['gender','age','q1','q2','q3','q4','q5']]
-        df_filtered['age'].fillna(df_filtered['age'].mean(), inplace=True)
         df_filtered['age'] = df_filtered['age'] > 40 
 
         grouped = df_filtered.groupby(['gender','age'] , as_index=True).mean()
-        return grouped
+        print(grouped)
 
