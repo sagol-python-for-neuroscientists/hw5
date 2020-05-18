@@ -139,7 +139,7 @@ class QuestionnaireAnalysis:
         cols = ['q1', 'q2', 'q3', 'q4', 'q5']
         ### I added the following line because when not filling NaNs with a value
         ### above 40, the resulting df ignores them in the mean, and the result is != the test df.
-        self.data['age'] = self.data['age'].fillna(value=41)
+        #self.data['age'] = self.data['age'].fillna(value=41)
         self.data = self.data[self.data['age'].notna()]
         self.data['above_40'] = self.data['age'] > 40
         # part A
