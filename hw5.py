@@ -70,14 +70,20 @@ class QuestionnaireAnalysis:
         self.data = df
         return self.data
 
+    def correlate_gender_age(self) -> pd.DataFrame:
+        #index = pd.MultiIndex.from_arrays(self.data, names=('gender', 'age'))
+        df = self.data[['gender', 'age','q1','q2','q3','q4','q5']]
+        df.age = df.age.apply(lambda x: x > 40)
+        df = df.set_index(['gender', 'age'])
+        df = df.groupby(['gender', 'age']).mean()
+        return df
+
+
 
 def validEmail(email):
     regex = '.+@.+\..+'
     pattern = re.compile(regex)
     return re.match(pattern,email) is not None
-
-
-
 
 
 
