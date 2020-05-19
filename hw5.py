@@ -145,10 +145,10 @@ class QuestionnaireAnalysis:
 
 
 
-fname = '/Users/guyweintraub/Desktop/Google Drive/קורסים/Python_course/hw5/data.json'
+# fname = '/Users/guyweintraub/Desktop/Google Drive/קורסים/Python_course/hw5/data.json'
 
-q = QuestionnaireAnalysis(fname)
-q.read_data()
+# q = QuestionnaireAnalysis(fname)
+# q.read_data()
 
 # # q2 = q.remove_rows_without_mail()
 
@@ -162,30 +162,30 @@ q.read_data()
 
 # # q_nofile = QuestionnaireAnalysis("blabl")
 
-# #### q5
-q5 = q.correlate_gender_age()
-truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age'])
+# # #### q5
+# q5 = q.correlate_gender_age()
+# truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age'])
 
-print("my answer:\n")
-print(q5)
-print("\nThe truth:\n")
-print(truth)
-
-pd.testing.assert_frame_equal(q5, truth)
-
-# data = pd.read_json(fname)
-
-# data.dropna(subset=['age'], inplace=True)
-# data['age'] = data['age']>40
-
-# data_mi = data.set_index(['gender', 'age'], append=True) # create multi_index
-# data_mi = data_mi.loc[:,'q1':'q5']
-# grouped = data_mi.groupby(['gender','age']).mean()
-
-
-# print("my grouped:\n")
-# print(grouped)
+# print("my answer:\n")
+# print(q5)
 # print("\nThe truth:\n")
 # print(truth)
 
-# pd.testing.assert_frame_equal(grouped, truth)
+# pd.testing.assert_frame_equal(q5, truth)
+
+# # data = pd.read_json(fname)
+
+# # data.dropna(subset=['age'], inplace=True)
+# # data['age'] = data['age']>40
+
+# # data_mi = data.set_index(['gender', 'age'], append=True) # create multi_index
+# # data_mi = data_mi.loc[:,'q1':'q5']
+# # grouped = data_mi.groupby(['gender','age']).mean()
+
+
+# # print("my grouped:\n")
+# # print(grouped)
+# # print("\nThe truth:\n")
+# # print(truth)
+
+# # pd.testing.assert_frame_equal(grouped, truth)
