@@ -134,8 +134,8 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
-        self.data['age'] = self.data['age']<40
-        self.data['age'] = ~self.data['age']
+        self.data.dropna(subset=['age'], inplace=True)
+        self.data['age'] = self.data['age']>40
 
         data_mi = self.data.set_index(['gender', 'age'], append=True) # create multi_index
         data_mi = data_mi.loc[:,'q1':'q5']
@@ -171,11 +171,13 @@ print(q5)
 print("\nThe truth:\n")
 print(truth)
 
+pd.testing.assert_frame_equal(q5, truth)
 
 # data = pd.read_json(fname)
-# # data.dropna(subset=['age'], inplace=True)
-# data['age'] = data['age']<40
-# data['age'] = ~data['age']
+
+# data.dropna(subset=['age'], inplace=True)
+# data['age'] = data['age']>40
+
 # data_mi = data.set_index(['gender', 'age'], append=True) # create multi_index
 # data_mi = data_mi.loc[:,'q1':'q5']
 # grouped = data_mi.groupby(['gender','age']).mean()
