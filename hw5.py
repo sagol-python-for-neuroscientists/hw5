@@ -42,7 +42,6 @@ class QuestionnaireAnalysis:
         ages = self.data['age']
         bins_list = np.arange(start=0, stop=101, step=10)
         hist, bins, _ = plt.hist(ages, bins=bins_list)
-        # plt.show()
         return hist, bins
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
@@ -74,3 +73,56 @@ class QuestionnaireAnalysis:
         # if re.search(regex, email):
         #     return False
         # return True
+
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+          The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+              Row indices of the students that their new grades were generated
+        """
+        questions = ['q1', 'q2', 'q3', 'q4', 'q5']
+        df = self.data.copy()
+        indices_set = set()
+        for question in questions:
+            # list all Nan indices
+            nan_indices = list(np.where(df[question].isnull())[0])
+            indices_set.update(nan_indices)
+            # find mean while ignoring the Nan
+            mean = df[question].mean()
+            # replace Nan with mean
+            df[question] = df[question].fillna(mean)
+        return df, np.array(list(indices_set))
+
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+        df = self.data.copy()
+        # get mean over questions only
+        df['score'] = df.loc[:, 'q1': 'q5'].mean(axis=1)
+        # update score with NA where there is more Nan than 'maximal_nans_per_sub' in a row
+        df['score'].iloc[df[(df.loc[:, 'q1': 'q5'].isnull().sum(axis=1) > maximal_nans_per_sub)].index] = np.nan
+        # convert score into UInt8
+        df['score'] = np.floor(df['score']).astype("UInt8")
+        return df
