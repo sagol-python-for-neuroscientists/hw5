@@ -143,8 +143,9 @@ class QuestionnaireAnalysis:
         A DataFrame with a MultiIndex containing the gender and whether the subject is above
         40 years of age, and the average score in each of the five questions.
     """
-        df = pd.DataFrame(data=self.data, columns=self.Q_KEYS)
-        df_index = pd.concat([df.index.to_series(), self.data['gender'], self.data['age'] > 40], axis=1)
+        valid_age_df= self.data[self.data.age.notna()]
+        df = pd.DataFrame(data=valid_age_df, columns=self.Q_KEYS)
+        df_index = pd.concat([df.index.to_series(), valid_age_df['gender'], valid_age_df['age'] > 40], axis=1)
         df_index = pd.MultiIndex.from_frame(df_index, names=[0, 'gender', 'age'])
         df.set_index(df_index, inplace=True)
         return df.groupby(['gender', 'age'], dropna=False).mean()
@@ -153,9 +154,10 @@ class QuestionnaireAnalysis:
 
 if __name__ == '__main__':
     q = QuestionnaireAnalysis('data.json')
+    q.read_data()
     # hist, bins = q.show_age_distrib()
     # df = q.remove_rows_without_mail()
-    df = q.fill_na_with_mean()
+    df = q.correlate_gender_age()
 
 
 
