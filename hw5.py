@@ -58,10 +58,11 @@ class QuestionnaireAnalysis:
         return df
 
     def __is_invalid_email(self, email: str) -> bool:
-        # TODO: improve function
-        if str.find(email, '@') == -1 or str.find(email, '.') == -1:
+        if '@' not in email or '.' not in email:
             return True
-        if email[0] in ['@', '.'] or email[-1] == ['@', '.']:
+        if email.startswith('@') or email.endswith('@'):
+            return True
+        if email.startswith('.') or email.endswith('.'):
             return True
         match_at_indices = [m.start() for m in re.finditer('@', email)]
         if len(match_at_indices) != 1:
@@ -69,10 +70,6 @@ class QuestionnaireAnalysis:
         if email[match_at_indices[0] + 1] == '.':
             return True
         return False
-        # regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-        # if re.search(regex, email):
-        #     return False
-        # return True
 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
