@@ -26,14 +26,14 @@ class QuestionnaireAnalysis:
 
     def show_age_distrib(self):
 
-      """Calculates and plots the age distribution of the participants.
-      Returns
-      -------
-      hist : np.ndarray
-      Number of people in a given bin
-      bins : np.ndarray
-      Bin edges
-      """
+        """Calculates and plots the age distribution of the participants.
+        Returns
+        -------
+        hist : np.ndarray
+        Number of people in a given bin
+        bins : np.ndarray
+        Bin edges
+        """
         bins = np.arange(0,110,10)
         hist = np.histogram(self.data['age'], bins= bins)
         plt.hist(self.data['age'], bins= bins)  # arguments are passed to np.histogram
