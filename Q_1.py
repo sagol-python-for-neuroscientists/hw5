@@ -24,10 +24,6 @@ class QuestionnaireAnalysis:
         data= pd.read_json(self.data_fname)
         return data
 
-#     1. Plot the distribution of ages of the participants. The bins for the histogram should be
-#  [0, 10), [10, 20), [20, 30), ..., [90, 100]. The function should return the result.
-
-#    ```python
     def show_age_distrib(self):
 
       """Calculates and plots the age distribution of the participants.
@@ -45,7 +41,24 @@ class QuestionnaireAnalysis:
         plt.show()
         return bins, hist
 
-        
-    # age_hist = self.data.hist(column='age', bins= bins)
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+    Returns
+    -------
+    df : pd.DataFrame
+    A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+    the (ordinal) index after a reset.
+        """
+        p= "^\w+.+@+\w+\.+(com)" 
+        #re pattern
+        data_good_emails = self.data[self.data['email'].str.match(p)== True]
+        #Creates a new data frame with only correct emails
+        data_good_emails = data_good_emails.reset_index(drop=True)
+        #resetting the indecis
+        return data_good_emails
+
+       
+
 
 a= QuestionnaireAnalysis('data.json')
