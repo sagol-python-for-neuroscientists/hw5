@@ -1,3 +1,4 @@
+from operator import index
 import pandas as pd
 from pathlib import *
 import json
@@ -58,7 +59,31 @@ class QuestionnaireAnalysis:
         #resetting the indecis
         return data_good_emails
 
-       
 
+    def fill_na_with_mean(self):
+
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+                Row indices of the students that their new grades were generated
+            """
+        
+        data_questions = self.data[['q1','q2','q3','q4','q5']]
+        c = data_questions[data_questions.isna().any(axis=1)].index
+        Changed_indices = np.asarray(c)
+        #returns all the inecies where ones can find Nan value
+        self.data[['q1','q2','q3','q4','q5']]= self.data[['q1','q2','q3','q4','q5']].fillna(self.data.mean())    
+        # each column specified received its respective mean. 
+        
+        return self.data, Changed_indices
+
+
+       
 
 a= QuestionnaireAnalysis('data.json')
