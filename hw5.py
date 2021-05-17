@@ -12,14 +12,18 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = data_fname
-        self.data = self.read_data()
+        if pathlib.Path(data_fname).is_file():
+            self.data_fname = pathlib.Path(data_fname)
+        else:
+            raise ValueError
+        self.data = []
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        return pd.read_json(self.data_fname)
+        self.data = pd.read_json(self.data_fname)
+        return self.data
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
