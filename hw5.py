@@ -151,5 +151,6 @@ class QuestionnaireAnalysis:
         df2 = df.drop(columns='age')
         df2['age'] = mask
         df2 = df2.set_index(['gender', 'age'], append=True)
-        grouped_df = df2[['q1', 'q2', 'q3', 'q4', 'q5']].groupby(level=['gender', 'age']).mean()
+        qs = ['q1', 'q2', 'q3', 'q4', 'q5']
+        grouped_df = df2[qs].groupby(level=['gender', 'age']).mean()
         return grouped_df
