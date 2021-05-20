@@ -24,16 +24,13 @@ class QuestionnaireAnalysis:
             raise ValueError(
                 DIRECTORY_NOT_EXISTING_MESSAGE.format(value=data_fname))
         else:
-            self.data_fname = data_fname
+            self.data_fname = pathlib.Path(data_fname)
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        with open(self.data_fname) as f:
-            data = json.load(f)
-            data = pd.DataFrame(data)
-        self.data = data
+        self.data = pd.read_json(self.data_fname)
 
 
 # Q1
@@ -66,64 +63,17 @@ class QuestionnaireAnalysis:
     A corrected DataFrame, i.e. the same table but with the erroneous rows
     removed and the (ordinal) index after a reset.
         """
-        df = self.data
-        df['email'] = df['email'].str.strip()
-        atcount = df.email.str.count("@")
-        atdrop = []
-        for x in atcount.index:
-            if atcount[x] != 1:
-                atdrop.append(x)
-        df = df.drop(atdrop)
 
-        atcount2 = df.email.str.startswith("@")
-        atdrop2 = []
-        for x in atcount2.index:
-            if atcount2[x]:
-                atdrop.append(x)
-        df = df.drop(atdrop2)
-
-        atcount3 = df.email.str.endswith("@")
-        atdrop3 = []
-        for x in atcount3.index:
-            if atcount3[x]:
-                atdrop.append(x)
-        df = df.drop(atdrop3)
-
-        pointdrop = []
-        for i, x in enumerate(df.email):
-            periods = 0
-            for char in x:
-                if char == '.':
-                    periods += 1
-            if periods == 0:
-                pointdrop.append(i)
-        df = df.drop(pointdrop)
-
-        pointcount2 = df.email.str.startswith(".")
-        pointdrop2 = []
-        for x in pointcount2.index:
-            if pointcount2[x]:
-                pointdrop2.append(x)
-        df = df.drop(pointdrop2)
-
-        pointcount3 = df.email.str.endswith(".")
-        pointdrop3 = []
-        for x in pointcount3.index:
-            if pointcount3[x]:
-                pointdrop3.append(x)
-        df = df.drop(pointdrop3)
-
-        atpointindex = df.email.index
-        atpointdrop = []
-        for x in atpointindex:
-            if "@." in df.email[x]:
-                atpointdrop.append(x)
-        df = df.drop(atpointdrop)
+        df = self.data.loc[self.data['email'].str.contains('@', na=False)].copy()
+        df = df.loc[df['email'].str.contains('.', na=False, regex=False)].copy()
+        df = df.loc[~df['email'].str.startswith('@.', na=False)].copy()
+        df = df.loc[~df['email'].str.endswith('@.', na=False)].copy()
+        df = df.loc[~df['email'].str.contains('@.', na=False, regex=False)].copy()
+        df = df.loc[df['email'].str.count('@.') == 1].copy()
 
         df = df.reset_index(drop=True)
 
-        return(df)
-
+        return df
 
 # Q3
 
@@ -177,8 +127,8 @@ class QuestionnaireAnalysis:
             if sum(row.isnull()) >= 2:
                 score[index] = np.nan
             else:
-                score[index] = np.nanmean(row)
-        df['score'] = score.astype(pd.UInt8Dtype)
+                score[index] = np.floor(np.nanmean(row))
+        df['score'] = pd.Series(score.tolist(), dtype='UInt8')
 
         return(df)
 
@@ -196,6 +146,7 @@ class QuestionnaireAnalysis:
             40 years of age, and the average score in each of the five questions.
         """
         df = self.data.replace('nan', np.nan)
+        df = df.dropna(subset=['age'])
         df['age'] = df.age > 40
         df = df.set_index(['gender', 'age'], append=True)
         df = df[['q1', 'q2', 'q3', 'q4', 'q5']]
