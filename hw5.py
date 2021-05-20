@@ -170,11 +170,28 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
+        df = self.read_data()
+        print(df)
+        # na of age
+        df = df[df['age'].notna()]
 
 
+        #whether their age is above or below 40
+        df['age'] = df.age.ge(40)
+
+        #Use the original DataFrame and transform its index into a MultiIndex with three levels: the ordinal index (row number), gender and age.
+        df = df.set_index(['gender', 'age'], append=True)
+        #Allocate the different subjects into groups based on two parameters: Their gender, and whether their age is above or below 40.
+        # Hint - use df.groupby. The result should be similar to what is shown in the figure below (you don't have to plot it yourself).
+
+        df = df.groupby(level=["gender", "age"]).mean()
+        df = df.drop(columns='id')
+        #print(df )
+        return(df)
 
 #ques = QuestionnaireAnalysis(pathlib.Path(r"C:\Users\mandy\source\repos\hw5\data.json"))
 #ques.show_age_distrib()
 #ques.remove_rows_without_mail()
 #ques.fill_na_with_mean()
 #ques.score_subjects()
+#ques.correlate_gender_age()
