@@ -101,8 +101,7 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
-
-        # QuestionnaireAnalysis.read_data()
+        
         score = np.mean(self.data.iloc[:, 7:12], axis=1)
         mor_than_max_nans = self.data.iloc[:, 7:12].isna().sum(axis=1) > maximal_nans_per_sub
         score.iloc[mor_than_max_nans] = np.nan
