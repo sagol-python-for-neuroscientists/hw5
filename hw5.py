@@ -1,6 +1,13 @@
 import pathlib
-from typing import Union
-import json
+from typing import Union, Tuple
+
+from pandas.core.arrays.integer import Int64Dtype, Int8Dtype, UInt8Dtype
+import numpy as np
+import matplotlib.pyplot as plt
+import warnings
+warnings.simplefilter(action='ignore') #ignores editing the dataframe warning
+import pandas as pd
+
 
 class QuestionnaireAnalysis:
     """
@@ -9,12 +16,145 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
+        #check if the file is str or pathlib
+        if type(data_fname)!=str:
+            if type(data_fname)!=type(pathlib.Path()):
+                raise ValueError
+        
+        # check if we can open the file
+        try:
+            f=open(data_fname,"r")
+            f.close()
+        except:
+            raise ValueError
+        
         self.data_fname=data_fname
+        if type(data_fname)!=type(pathlib.Path()):
+            self.data_fname=pathlib.Path(data_fname)
+
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        jfile=open(self.data_fname,'r')
-        self.data=json.load(jfile)
-        jfile.close()
+        self.data=pd.read_json(self.data_fname)
+
+
+    def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Calculates and plots the age distribution of the participants.
+        Returns
+        -------
+        hist : np.ndarray
+        Number of people in a given bin
+        bins : np.ndarray
+        Bin edges
+            """
+        bins=np.arange(0,110,10)
+        hist=np.zeros(10)
+
+        for curr_age in self.data["age"]:
+            if str(curr_age).lower()=="nan":
+                continue
+            if curr_age==100:
+                curr_age=-1;
+            hist[int(curr_age/10)]+=1
+        
+#        plt.plot(bins[:-1],hist)
+#        plt.xticks(bins)
+#        plt.show()
+        return (hist, bins)
+
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+        Returns
+        -------
+        df : pd.DataFrame
+        A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+        the (ordinal) index after a reset.
+            """
+        data=pd.read_json(self.data_fname)
+        data=data[data["email"].str.count("@")==1]      # contains one "@"
+        data=data[data["email"].str.contains("\.")]     # contains at least one "."
+        data=data[data["email"].str[0]!="@"]            # "@" isn't in first location
+        data=data[data["email"].str[-1]!="@"]           # "@" isn't in last location
+        data=data[data["email"].str[0]!="\."]           # "." isn't in first location
+        data=data[data["email"].str[-1]!="\."]          # "." isn't in last location
+        data=data[data["email"].str.count("@\.")==0]    # does not contain "@."
+        data=data.reset_index()
+        return data
+
+
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+        The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+            Row indices of the students that their new grades were generated
+            """
+        
+        dic={}
+        dic[0]='q1'
+        dic[1]='q2'
+        dic[2]='q3'
+        dic[3]='q4'
+        dic[4]='q5'
+
+        means=self.data[['q1','q2','q3','q4','q5']].mean(axis=1)
+        onlyQuestions = self.data[['q1','q2','q3','q4','q5']]
+        boolMatrix = onlyQuestions*0!=0 #nan has the property where nan*0!=0
+        nanIndices = np.where(boolMatrix)
+        for i in range(len(nanIndices[0])):
+            self.data[dic[nanIndices[1][i]]][nanIndices[0][i]]=means[nanIndices[0][i]]
+
+        return(self.data,list(set(nanIndices[0])))
+
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+        dfScores=self.data.copy()
+        means=self.data[['q1','q2','q3','q4','q5']].mean(axis=1)
+        means=means.astype(int).astype("UInt8")
+        onlyQuestions = self.data[['q1','q2','q3','q4','q5']]
+        
+        # same as in question 3
+        
+        dic={}
+        dic[0]='q1'
+        dic[1]='q2'
+        dic[2]='q3'
+        dic[3]='q4'
+        dic[4]='q5'
+
+
+        boolMatrix = onlyQuestions*0!=0 #nan has the property where nan*0!=0
+        nanIndices = np.where(boolMatrix)
+
+        for i in range(len(nanIndices[0])-1):
+            if nanIndices[0][i]==nanIndices[0][i+1]:
+                means[nanIndices[0][i]]=self.data[dic[nanIndices[1][i]]][nanIndices[0][i]]
+        
+        dfScores['score']=means
+        return(dfScores)
+
