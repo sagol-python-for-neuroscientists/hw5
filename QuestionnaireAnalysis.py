@@ -127,7 +127,7 @@ class QuestionnaireAnalysis:
             return math.floor(ser.mean())
         df = self.data.copy()
         col = pd.Series(['q1', 'q2', 'q3', 'q4', 'q5'])
-        df['score'] = df[col].apply(ser_mean,axis=1)
+        df['score'] = df[col].apply(ser_mean,axis=1).astype('UInt8')
         return df
 
 
