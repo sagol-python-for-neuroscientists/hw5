@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from pandas._libs.missing import NA, NAType
 from pandas.core.arrays.integer import UInt8Dtype
 from pandas.core.frame import DataFrame
-
+from typing import Union
+from typing import Tuple
 
 class QuestionnaireAnalysis:
     """
@@ -14,7 +15,7 @@ class QuestionnaireAnalysis:
     Should be able to accept strings and pathlib.Path objects.
     """
 
-    def __init__(self, data_fname):
+    def __init__(self, data_fname: Union[pathlib.Path, str]):
         path = pathlib.Path(data_fname)
         if path.exists():
             self.data_fname = path
@@ -63,7 +64,7 @@ class QuestionnaireAnalysis:
         nd.index = range(0, len(indexes))
         return nd
 
-    def fill_na_with_mean(self):
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
         all questions, and replaces that missing value with the mean of the
         other grades for that student.
