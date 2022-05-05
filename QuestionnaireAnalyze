@@ -7,6 +7,7 @@ from typing import Union
 from typing import Tuple
 from matplotlib import pyplot as mpl
 import pathlib
+import pytest
 
 class QuestionnaireAnalysis:
     """
@@ -38,19 +39,51 @@ class QuestionnaireAnalysis:
             Bin edges
         """
         bins=[0,10,20,30,40,50,60,70,80,90,100]
-        lent=range(len(self.data))
-        ages=np.array(lent)
-        for n in lent:
-            age=self.data[n].get('age')
-            
-            if not np.isnan(age):
-                print(age)
-                ages[n]=age
+        lent=len(self.data)
+        ages=list()
+        for n in range(lent):
+            if not self.data[n].get('age')=='nan':
+                ages.append(int(self.data[n].get('age')))
+
         mpl.figure()
-        mpl.hist(ages, bins)
+        histogram=mpl.hist(ages, bins)
         mpl.show()
+        return histogram
+    
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+            the (ordinal) index after a reset.
+        """
+        cor_df=pd.DataFrame()
+        lent=len(self.data)
+        for n in range(lent):
+            email=self.data[n].get('email')
+            email_last_idx=len(email)-1
+            if not email.find('@')==-1 and not email.find('@')==0 and not email.find('@')==email_last_idx:
+                if email.find('@')==email.rfind('@'):
+                    if not email.find('.')==-1 and not email.find('.')==0 and not email.find('.')==email_last_idx:
+                        if email.find('@.')==-1:
+                            
+                            cor_df[n]=self.data[n].values()
+        return cor_df
+
         
 QA=QuestionnaireAnalysis('data.json')
 QA.read_data()
-QA.show_age_distrib()
+q=QA.show_age_distrib()
+emails=QA.remove_rows_without_mail()
+
+def test_email_validation():
+    truth = pd.read_csv('tests_data/q2_email.csv')
+    fname = 'data.json'
+    q = QuestionnaireAnalysis(fname)
+    q.read_data()
+    corrected = q.remove_rows_without_mail()
+    assert truth["email"].equals(corrected["email"])
+
 
