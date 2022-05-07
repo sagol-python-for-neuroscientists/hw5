@@ -1,4 +1,5 @@
 from asyncore import read
+from itertools import count
 import json
 import pandas as pd
 import numpy as np
@@ -86,9 +87,10 @@ class QuestionnaireAnalysis:
             Row indices of the students that their new grades were generated
         """
         arr=pd.DataFrame()
-        cor_flag=False
+        
         lent=len(self.data)
         for n in range(lent):
+            cor_flag=False
             q1=float(self.data[n].get('q1'))
             q2=float(self.data[n].get('q2'))
             q3=float(self.data[n].get('q3'))
@@ -115,10 +117,64 @@ class QuestionnaireAnalysis:
 
         return [pd.DataFrame(self.data),arr]
 
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+
+        lent=len(self.data)
+        for n in range(lent):
+            q1=float(self.data[n].get('q1'))
+            q2=float(self.data[n].get('q2'))
+            q3=float(self.data[n].get('q3'))
+            q4=float(self.data[n].get('q4'))
+            q5=float(self.data[n].get('q5'))
+            q_list=[q1,q2,q3,q4,q5]
+            num_nan=q_list.count("nan")
+            if num_nan<maximal_nans_per_sub:
+                self.data[n]["score"]=np.nanmean([q1,q2,q3,q4,q5])
+            else:
+                self.data[n]["score"]=pd.NA
+        
+        return pd.DataFrame(self.data)
+
+
         
 QA=QuestionnaireAnalysis('data.json')
 QA.read_data()
+"""df=QA.score_subjects()"""
+df, _=QA.fill_na_with_mean()
+print(df)
+def test_score_dtype():
+    fname = 'data.json'
+    q = QuestionnaireAnalysis(fname)
+    q.read_data()
+    df = q.score_subjects()
+    assert isinstance(df["score"].dtype, pd.UInt8Dtype)
 
+
+def test_score_results():
+    truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
+    fname = 'data.json'
+    q = QuestionnaireAnalysis(fname)
+    q.read_data()
+    df = q.score_subjects()
+    assert df["score"].equals(truth)
 
 def test_fillna_rows():
     truth = np.load('tests_data/q3_fillna.npy')
@@ -127,6 +183,7 @@ def test_fillna_rows():
     q.read_data()
     _, rows = q.fill_na_with_mean()
     assert np.array_equal(truth, rows)
+    
 
 def test_fillna_df():
     truth = pd.read_csv('tests_data/q3_fillna.csv')
@@ -135,6 +192,3 @@ def test_fillna_df():
     q.read_data()
     df, _ = q.fill_na_with_mean()
     df.equals(truth)
-
-df, _ = QA.fill_na_with_mean()
-print(df)
