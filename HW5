@@ -38,7 +38,7 @@ class QuestionnaireAnalysis:
         bins : np.ndarray
             Bin edges
         """
-        bins=[0,10,20,30,40,50,60,70,80,90,100]
+        bins=[0,10,20,30,40,50,60,70,80,90,99]
         lent=len(self.data)
         ages=list()
         for n in range(lent):
@@ -78,7 +78,7 @@ QA.read_data()
 q=QA.show_age_distrib()
 emails=QA.remove_rows_without_mail()
 
-def test_email_validation():
+def test_email_validatiHW5on():
     truth = pd.read_csv('tests_data/q2_email.csv')
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
