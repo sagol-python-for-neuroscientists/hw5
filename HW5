@@ -42,8 +42,9 @@ class QuestionnaireAnalysis:
         lent=len(self.data)
         ages=list()
         for n in range(lent):
-            if not self.data[n].get('age')=='nan':
-                ages.append(int(self.data[n].get('age')))
+            age=self.data[n].get('age')
+            if isinstance(age,int):
+                ages.append(age)
 
         mpl.figure()
         histogram=mpl.hist(ages, bins)
@@ -72,17 +73,68 @@ class QuestionnaireAnalysis:
                             cor_df[n]=self.data[n].values()
         return cor_df
 
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+            Row indices of the students that their new grades were generated
+        """
+        arr=pd.DataFrame()
+        cor_flag=False
+        lent=len(self.data)
+        for n in range(lent):
+            q1=float(self.data[n].get('q1'))
+            q2=float(self.data[n].get('q2'))
+            q3=float(self.data[n].get('q3'))
+            q4=float(self.data[n].get('q4'))
+            q5=float(self.data[n].get('q5'))
+            meanq=np.nanmean([q1,q2,q3,q4,q5])
+            if np.isnan(q1):
+                cor_flag=True
+                self.data[n]["q1"]=meanq
+            if np.isnan(q2):
+                cor_flag=True
+                self.data[n]["q2"]=meanq
+            if np.isnan(q3):
+                cor_flag=True
+                self.data[n]["q3"]=meanq
+            if np.isnan(q4):
+                cor_flag=True
+                self.data[n]["q4"]=meanq
+            if np.isnan(q5):
+                cor_flag=True
+                self.data[n]["q5"]=meanq
+            if cor_flag==True:
+                arr[n]=n
+
+        return [pd.DataFrame(self.data),arr]
+
         
 QA=QuestionnaireAnalysis('data.json')
 QA.read_data()
-q=QA.show_age_distrib()
 
-def test_email_validatiHW5on():
-    truth = pd.read_csv('tests_data/q2_email.csv')
+
+def test_fillna_rows():
+    truth = np.load('tests_data/q3_fillna.npy')
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
     q.read_data()
-    corrected = q.remove_rows_without_mail()
-    assert truth["email"].equals(corrected["email"])
+    _, rows = q.fill_na_with_mean()
+    assert np.array_equal(truth, rows)
 
+def test_fillna_df():
+    truth = pd.read_csv('tests_data/q3_fillna.csv')
+    fname = 'data.json'
+    q = QuestionnaireAnalysis(fname)
+    q.read_data()
+    df, _ = q.fill_na_with_mean()
+    df.equals(truth)
 
+df, _ = QA.fill_na_with_mean()
+print(df)
