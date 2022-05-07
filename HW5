@@ -76,7 +76,6 @@ class QuestionnaireAnalysis:
 QA=QuestionnaireAnalysis('data.json')
 QA.read_data()
 q=QA.show_age_distrib()
-emails=QA.remove_rows_without_mail()
 
 def test_email_validatiHW5on():
     truth = pd.read_csv('tests_data/q2_email.csv')
