@@ -1,4 +1,5 @@
 from asyncore import read
+from email import message
 from itertools import count
 import json
 import pandas as pd
@@ -20,14 +21,26 @@ class QuestionnaireAnalysis:
         """
         Initialize a questionnare analysis
         """
-        self.data_fname=data_fname
+        BAD_TYPE_MESSAGE = "Invalid input: ({value1})! Only Path or str are accepted"
+        BAD_FNAME_MESSAGE= "Invalid input: ({value1})! File not found"
+        if not pathlib.Path.exists(pathlib.Path(data_fname)):
+            message=BAD_FNAME_MESSAGE.format(value1=data_fname)
+            raise ValueError(message)
+        if isinstance(data_fname,pathlib.Path):
+            self.data_fname=data_fname
+        elif isinstance(data_fname,str):
+            self.data_fname=pathlib.Path(data_fname)
+        else:
+            message=BAD_TYPE_MESSAGE.format(value1=data_fname)
+            raise TypeError(message)
+        
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
         with open(self.data_fname,'r') as file:
-            self.data=json.load(file)
+            self.data=pd.DataFrame(json.load(file))
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
@@ -39,11 +52,11 @@ class QuestionnaireAnalysis:
         bins : np.ndarray
             Bin edges
         """
-        bins=[0,10,20,30,40,50,60,70,80,90,99]
+        bins=[0,10,20,30,40,50,60,70,80,90,100]
         lent=len(self.data)
         ages=list()
         for n in range(lent):
-            age=self.data[n].get('age')
+            age=self.data["age"][n]
             if isinstance(age,int):
                 ages.append(age)
 
@@ -61,17 +74,24 @@ class QuestionnaireAnalysis:
             A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
             the (ordinal) index after a reset.
         """
-        cor_df=pd.DataFrame()
+        cor_df=self.data
         lent=len(self.data)
         for n in range(lent):
-            email=self.data[n].get('email')
+            email=self.data["email"][n]
             email_last_idx=len(email)-1
-            if not email.find('@')==-1 and not email.find('@')==0 and not email.find('@')==email_last_idx:
-                if email.find('@')==email.rfind('@'):
-                    if not email.find('.')==-1 and not email.find('.')==0 and not email.find('.')==email_last_idx:
-                        if email.find('@.')==-1:
-                            
-                            cor_df[n]=self.data[n].values()
+            if email.find('@')==-1 or  email.find('@')==0 or email.find('@')==email_last_idx:
+                cor_df=cor_df.drop(index=n)
+                continue
+            if not email.find('@')==email.rfind('@'):
+                cor_df=cor_df.drop(index=n)
+                continue
+            if  email.find('.')==-1 or email.find('.')==0 or email.find('.')==email_last_idx:
+                cor_df=cor_df.drop(index=n)
+                continue
+            if not email.find('@.')==-1:
+                cor_df=cor_df.drop(index=n)
+                continue
+        cor_df=cor_df.reset_index()
         return cor_df
 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
@@ -86,36 +106,36 @@ class QuestionnaireAnalysis:
         arr : np.ndarray
             Row indices of the students that their new grades were generated
         """
-        arr=pd.DataFrame()
-        
+        arr=self.data
         lent=len(self.data)
+        corrected=pd.Series(range(lent))
         for n in range(lent):
             cor_flag=False
-            q1=float(self.data[n].get('q1'))
-            q2=float(self.data[n].get('q2'))
-            q3=float(self.data[n].get('q3'))
-            q4=float(self.data[n].get('q4'))
-            q5=float(self.data[n].get('q5'))
+            q1=float(arr['q1'][n])
+            q2=float(arr['q2'][n])
+            q3=float(arr['q3'][n])
+            q4=float(arr['q4'][n])
+            q5=float(arr['q5'][n])
             meanq=np.nanmean([q1,q2,q3,q4,q5])
             if np.isnan(q1):
                 cor_flag=True
-                self.data[n]["q1"]=meanq
+                arr["q1"][n]=meanq
             if np.isnan(q2):
                 cor_flag=True
-                self.data[n]["q2"]=meanq
+                arr["q2"][n]=meanq
             if np.isnan(q3):
                 cor_flag=True
-                self.data[n]["q3"]=meanq
+                arr["q3"][n]=meanq
             if np.isnan(q4):
                 cor_flag=True
-                self.data[n]["q4"]=meanq
+                arr["q4"][n]=meanq
             if np.isnan(q5):
                 cor_flag=True
-                self.data[n]["q5"]=meanq
-            if cor_flag==True:
-                arr[n]=n
+                arr["q5"][n]=meanq
+            if not cor_flag:
+                corrected=corrected.drop(n)
 
-        return [pd.DataFrame(self.data),arr]
+        return [arr,np.array(corrected)]
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
@@ -139,19 +159,25 @@ class QuestionnaireAnalysis:
 
         lent=len(self.data)
         for n in range(lent):
-            q1=float(self.data[n].get('q1'))
-            q2=float(self.data[n].get('q2'))
-            q3=float(self.data[n].get('q3'))
-            q4=float(self.data[n].get('q4'))
-            q5=float(self.data[n].get('q5'))
+            q1=float(self.data['q1'][n])
+            q2=float(self.data['q2'][n])
+            q3=float(self.data['q3'][n])
+            q4=float(self.data['q4'][n])
+            q5=float(self.data['q5'][n])
             q_list=[q1,q2,q3,q4,q5]
             num_nan=q_list.count("nan")
             if num_nan<maximal_nans_per_sub:
-                self.data[n]["score"]=np.nanmean([q1,q2,q3,q4,q5])
+                self.data["score"][n]=np.nanmean([q1,q2,q3,q4,q5])
             else:
-                self.data[n]["score"]=pd.NA
+                self.data["score"][n]=pd.NA
         
         return pd.DataFrame(self.data)
 
 
-        
+truth = np.load('tests_data/q3_fillna.npy')
+fname = 'data.json'
+q = QuestionnaireAnalysis(fname)
+q.read_data()
+_, rows = q.fill_na_with_mean()
+print(rows)
+print(truth)
