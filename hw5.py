@@ -17,7 +17,7 @@ class QuestionnaireAnalysis:
             self.data_fname = pathlib.Path(data_fname).resolve()
         except TypeError:
             print("The file name needs to be a string or a pathlib path")
-            raise
+
         if not self.data_fname.is_file():
             raise ValueError("The file does not exists, check directory ")
 
@@ -70,9 +70,13 @@ class QuestionnaireAnalysis:
     arr : np.ndarray
           Row indices of the students that their new grades were generated
         """
+        # copy of data
         corrected_df = self.data.copy()
+        # finding null indexes
         null_idx = pd.isnull(self.data[['q1', 'q2', 'q3', 'q4', 'q5']]).any(1).to_numpy().nonzero()[0]
+        # filing section with mean value of row
         new = self.data[['q1', 'q2', 'q3', 'q4', 'q5']].apply(lambda row: round(row.fillna(row.mean()), 1), axis=1)
+        # adding corrected section to data
         corrected_df[['q1', 'q2', 'q3', 'q4', 'q5']] = new
 
         return corrected_df, null_idx
