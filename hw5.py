@@ -106,36 +106,36 @@ class QuestionnaireAnalysis:
         arr : np.ndarray
             Row indices of the students that their new grades were generated
         """
-        arr=self.data
+        df=self.data
         lent=len(self.data)
         corrected=pd.Series(range(lent))
         for n in range(lent):
             cor_flag=False
-            q1=float(arr['q1'][n])
-            q2=float(arr['q2'][n])
-            q3=float(arr['q3'][n])
-            q4=float(arr['q4'][n])
-            q5=float(arr['q5'][n])
+            q1=float(df['q1'][n])
+            q2=float(df['q2'][n])
+            q3=float(df['q3'][n])
+            q4=float(df['q4'][n])
+            q5=float(df['q5'][n])
             meanq=np.nanmean([q1,q2,q3,q4,q5])
             if np.isnan(q1):
                 cor_flag=True
-                arr["q1"][n]=meanq
+                df["q1"][n]=meanq
             if np.isnan(q2):
                 cor_flag=True
-                arr["q2"][n]=meanq
+                df["q2"][n]=meanq
             if np.isnan(q3):
                 cor_flag=True
-                arr["q3"][n]=meanq
+                df["q3"][n]=meanq
             if np.isnan(q4):
                 cor_flag=True
-                arr["q4"][n]=meanq
+                df["q4"][n]=meanq
             if np.isnan(q5):
                 cor_flag=True
-                arr["q5"][n]=meanq
+                df["q5"][n]=meanq
             if not cor_flag:
                 corrected=corrected.drop(n)
 
-        return [arr,np.array(corrected)]
+        return [df,np.array(corrected)]
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
@@ -157,27 +157,28 @@ class QuestionnaireAnalysis:
             A new DF with a new column - "score".
         """
 
+        df=self.data
         lent=len(self.data)
+        scores=pd.Series(lent)
         for n in range(lent):
-            q1=float(self.data['q1'][n])
-            q2=float(self.data['q2'][n])
-            q3=float(self.data['q3'][n])
-            q4=float(self.data['q4'][n])
-            q5=float(self.data['q5'][n])
+            q1=float(df['q1'][n])
+            q2=float(df['q2'][n])
+            q3=float(df['q3'][n])
+            q4=float(df['q4'][n])
+            q5=float(df['q5'][n])
             q_list=[q1,q2,q3,q4,q5]
             num_nan=q_list.count("nan")
             if num_nan<maximal_nans_per_sub:
-                self.data["score"][n]=np.nanmean([q1,q2,q3,q4,q5])
+                scores[n]=np.uint8(np.nanmean([q1,q2,q3,q4,q5]))
             else:
-                self.data["score"][n]=pd.NA
-        
-        return pd.DataFrame(self.data)
+                scores[n]=pd.NA
+        df['score']=scores
+        return df
 
-
-truth = np.load('tests_data/q3_fillna.npy')
+truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
 fname = 'data.json'
 q = QuestionnaireAnalysis(fname)
 q.read_data()
-_, rows = q.fill_na_with_mean()
-print(rows)
+df = q.score_subjects()
+print(df["score"])
 print(truth)
