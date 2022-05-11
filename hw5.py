@@ -2,6 +2,7 @@ from asyncore import read
 from email import message
 from itertools import count
 import json
+from math import nan
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -10,6 +11,7 @@ from typing import Tuple
 from matplotlib import pyplot as mpl
 import pathlib
 import pytest
+pd.options.mode.chained_assignment = None  # default='warn'
 
 class QuestionnaireAnalysis:
     """
@@ -166,19 +168,16 @@ class QuestionnaireAnalysis:
             q3=float(df['q3'][n])
             q4=float(df['q4'][n])
             q5=float(df['q5'][n])
-            q_list=[q1,q2,q3,q4,q5]
-            num_nan=q_list.count("nan")
-            if num_nan<maximal_nans_per_sub:
-                scores[n]=np.uint8(np.nanmean([q1,q2,q3,q4,q5]))
+            q_list=np.array([q1,q2,q3,q4,q5])
+            print("q_list= "+str(q_list))
+            nan_mask=np.isnan(q_list)
+            num_nan=np.count_nonzero(nan_mask)
+            print("nan number is: "+str(num_nan))
+            if num_nan<=maximal_nans_per_sub:
+                scores[n]=int(np.nanmean([q1,q2,q3,q4,q5]))
             else:
                 scores[n]=pd.NA
-        df['score']=scores
+            print("scores are:"+str(q1)+", "+str(q2)+", "+str(q3)+", "+str(q4)+", "+str(q5)+". the mean is:"+str(scores[n]))
+        df['score']=scores.astype("UInt8")
         return df
 
-truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
-fname = 'data.json'
-q = QuestionnaireAnalysis(fname)
-q.read_data()
-df = q.score_subjects()
-print(df["score"])
-print(truth)
