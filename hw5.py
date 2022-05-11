@@ -181,3 +181,13 @@ class QuestionnaireAnalysis:
         df['score']=scores.astype("UInt8")
         return df
 
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with a MultiIndex containing the gender and whether the subject is above
+            40 years of age, and the average score in each of the five questions.
+        """
