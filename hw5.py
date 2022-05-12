@@ -1,4 +1,4 @@
-#from ctypes import Union
+
 import pathlib
 import numpy as np
 import pandas as pd
@@ -27,8 +27,7 @@ class QuestionnaireAnalysis:
         the attribute self.data.
         """
         self.data = pd.read_json(self.data_fname)
-        #with open self.data_fname 
-         #   self.data= append.
+      
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
