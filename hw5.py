@@ -14,7 +14,7 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-       
+    #    raise appropriate errors and define self.data_fname
         try:
             self.data_fname =  pathlib.Path(data_fname).resolve()
         except TypeError:
@@ -44,14 +44,7 @@ class QuestionnaireAnalysis:
     bins : np.ndarray
     Bin edges
         """
-        # ages=[]
-        # for a in self.data:
-        #     current=a['age'] 
-        #     if  isinstance(current,int):
-        #         ages.append(current)
-        # bins=[0,10,20,30,40,50,60,70,80,90,99]   
-        # histogram=plt.hist(ages, bins)
-        # plt.show()
+
         _,plot=plt.subplots()
         bin_cnt,edges,_=plot.hist(self.data['age'],bins=np.arange(0,110,10))
         plot.set_xlabel('age')
@@ -69,18 +62,9 @@ class QuestionnaireAnalysis:
     A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
     the (ordinal) index after a reset.
         """
-        # df=pd.DataFrame(self.data)
-        # corrected_df=df.copy()
-        # corrected_df=df.copy()
-        # indexes_to_drop = []
-        # for i,row in df.iterrows():
-        #     current_email=row.loc['email']
-        #     if not current_email.count('@') == 1 or  current_email[-1] == '@' or current_email[0] == '@' or '@.' in current_email : 
-        #         indexes_to_drop.append(i)
-        #     if not current_email.count('.') == 1 or  current_email[-1] == '.' or current_email[0] == '.':
-        #         indexes_to_drop.append(i)
-        # corrected_df.drop(corrected_df.index[indexes_to_drop], inplace=True )
-        # corrected_df.reset_index()
+        
+
+        # A quick trick to check for invalid emails:
         regex= r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Z|a-z]{1,}\b'
         corrected_df=self.data[self.data.email.str.match(regex)].reset_index(drop=True)
         return  corrected_df
@@ -97,11 +81,7 @@ class QuestionnaireAnalysis:
     arr : np.ndarray
         Row indices of the students that their new grades were generated
         """    
-        # corrected_df=self.data.copy()
-        # missing_vals_idx=pd.isnull(self.data[['q1','q2','q3','q4','q5']]).any(1). to_numpy.nonzero()[0]
-        # mask=self.data[['q1','q2','q3','q4','q5']].apply(lambda row: round(row.fillna(row.mean()),1),axis=1)
-        # corrected_df[['q1','q2','q3','q4','q5']] = mask
-        # return corrected_df, missing_vals_idx
+
         corrected_df = self.data.copy()
         missing_vals_idx = pd.isnull(self.data[['q1', 'q2', 'q3', 'q4', 'q5']]).any(1).to_numpy().nonzero()[0]
         new = self.data[['q1', 'q2', 'q3', 'q4', 'q5']].apply(lambda row: round(row.fillna(row.mean()), 1), axis=1)
@@ -129,8 +109,6 @@ class QuestionnaireAnalysis:
             A new DF with a new column - "score".
         """
         scores_df=self.data
-        # new_df['score']=np.where(new_df[['q1', 'q2', 'q3', 'q4', 'q5']].isnull().sum(axis=1) >maximal_nans_per_sub , [pd.NA , new_df[['q1', 'q2', 'q3', 'q4', 'q5']].mean(axis=1).astype("uint8").astype("UInt8")])
-
         # Create mean score column (type int)
         scores_df['score']=scores_df[['q1', 'q2', 'q3', 'q4', 'q5']].mean(axis=1).astype('uint8').astype('UInt8')
         # Find indices that surpass the threshold and replace with NA
