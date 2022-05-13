@@ -22,7 +22,7 @@ class QuestionnaireAnalysis:
             
     def __str__(self) -> str:
         print("__str__")
-        return f"QuestionnaireAnalysis: fname='{self.fname}', data={self.data}"
+        return f"QuestionnaireAnalysis: fname='{self.data_fname}', data={self.data}"
 
     def _verify_fname(self, data_fname):
         """ Verify the filename"""        
@@ -36,10 +36,9 @@ class QuestionnaireAnalysis:
         the attribute self.data.
         """
         print("read_data")
-        with self.data_fname.open(encoding="UTF-8") as source:
-            self.data = json.load(source)
+        self.data = pd.read_json(self.data_fname)
 
-# Q1
+    # region Q1
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
         Returns
@@ -51,15 +50,16 @@ class QuestionnaireAnalysis:
         """
         print("show_age_distrib")
         ages = []
-        for participant_i in self.data:
+        for participant_i in self.data.to_dict('records'):
             age = participant_i["age"]
-            if type(age) == int:
+            if not np.isnan(age):
                 ages.append(age)
         hist, bins, _ = plt.hist(ages, bins=[0,10,20,30,40,50,60,70,80,90,100])
         # plt.show()
         return hist, bins
+    # endregion
 
-#Q2
+    # region Q2
     def validate_mail(self, email):
         """
         Contains exactly one "@" sign, but doesn't start or end with it.
@@ -84,11 +84,38 @@ class QuestionnaireAnalysis:
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
         """
-        filtered = [participant for participant in self.data if self.validate_mail(participant["email"])]
+        records = self.data.to_dict('records')
+        filtered = [participant for participant in records if self.validate_mail(participant["email"])]
         df = pd.DataFrame(data=filtered)
         return df
+    # endregion
 
-    
+    # region Q3
+    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+        all questions, and replaces that missing value with the mean of the
+        other grades for that student.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            The corrected DataFrame after insertion of the mean grade
+        arr : np.ndarray
+            Row indices of the students that their new grades were generated
+        """
+        cols = ['q1', 'q2', 'q3', 'q4', 'q5']
+        df = self.data
+        df_q = df[cols]
+
+        s = df_q.isna().any(axis=1)
+        s = s.index[s]
+        arr = s.to_numpy()
+
+        df_q = df_q.fillna(df_q.mean())
+        df =pd.concat([df.drop(columns=cols), df_q], axis = 1)
+        return df, arr
+    # endregion
+
 if __name__ == '__main__':
     print("Question 1")
     filepath = r"C:\Users\Shaked Turk\OneDrive\Desktop\python_for_neuroscience\hw5\data.json"
@@ -97,8 +124,11 @@ if __name__ == '__main__':
     hist, bins = a.show_age_distrib()
     print(f"hist={hist}")
     print(f"\nbins={bins}")
-    print(a.remove_rows_without_mail())
-
-
+    # print(a.remove_rows_without_mail())
+    # df, arr = a.fill_na_with_mean()
+    # print(f"type df={type(df)}")
+    # print(f"type arr={type(arr)}")
+    # print(f"\ndf=\n{df}")
+    # print(f"\narr=\n{arr}")
 
   

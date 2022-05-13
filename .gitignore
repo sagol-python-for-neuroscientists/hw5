@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 # hw5.py
+notebook.ipynb
