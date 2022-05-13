@@ -2,6 +2,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 from typing import Union
+import matplotlib.pyplot as plt
 
 
 class QuestionnaireAnalysis:
@@ -44,8 +45,30 @@ class QuestionnaireAnalysis:
     """
         hist_vals = self.data.age.values
         hist_bins = range(0, 110, 10)
-        return np.histogram(hist_vals, bins = hist_bins)
+        hist, bins = np.histogram(hist_vals, bins = hist_bins)
+        plt.figure()
+        plt.hist(hist_vals, bins = hist_bins)
+        plt.show()
+        return hist, bins
 
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+Returns
+-------
+df : pd.DataFrame
+  A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+  the (ordinal) index after a reset.
+    """
+        drop_rows = []
+        for i, e in enumerate(self.data.email.values):
+            if e[-1] != "@" and e[0] != "@" and e.count('@') == 1 and e.count('@.') == 0 and e[0] != '.' and e[-1] != '.' and e.count('.') >= 1:
+                next
+            else:
+                drop_rows.append(i)
+
+        df = self.data.drop(drop_rows, inplace=False)
+        return df
 
 
 
@@ -55,10 +78,14 @@ t = QuestionnaireAnalysis(p)
 #print(t.data_fname) #data.json
 #print(type(t)) #class
 t.read_data()
+print(len(t.data))
 #data = t.data
 #print(t.data) #100 rows, 12 columns
 #print(type(t.data)) #pandas data frame
 #print(data.columns)
-age = t.show_age_distrib()
-print(age)
-print(type(age))
+#age = t.show_age_distrib()
+#print(age)
+#print(type(age))
+r = t.remove_rows_without_mail()
+print(len(r))
+print(len(t.data))
