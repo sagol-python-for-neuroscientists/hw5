@@ -32,16 +32,33 @@ class QuestionnaireAnalysis:
             with open(self.data_fname, "r") as file:
                 data = json.loads(file)
 """
+    def show_age_distrib(self) -> tuple[np.ndarray, np.ndarray]:
+        """Calculates and plots the age distribution of the participants.
 
-    
+    Returns
+        -------
+    hist : np.ndarray
+      Number of people in a given bin
+    bins : np.ndarray
+      Bin edges
+    """
+        hist_vals = self.data.age.values
+        hist_bins = range(0, 110, 10)
+        return np.histogram(hist_vals, bins = hist_bins)
+
 
 
 
 p = 'data.json'
 t = QuestionnaireAnalysis(p)
-print(type(t.data_fname)) #pathlib.windowspath
-print(t.data_fname) #data.json
-print(type(t)) #class
+#print(type(t.data_fname)) #pathlib.windowspath
+#print(t.data_fname) #data.json
+#print(type(t)) #class
 t.read_data()
+#data = t.data
 #print(t.data) #100 rows, 12 columns
-print(type(t.data)) #pandas data frame
+#print(type(t.data)) #pandas data frame
+#print(data.columns)
+age = t.show_age_distrib()
+print(age)
+print(type(age))
