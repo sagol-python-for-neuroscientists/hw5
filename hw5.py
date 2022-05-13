@@ -1,3 +1,4 @@
+import math
 import pathlib
 from pathlib import Path
 from typing import Tuple, Union
@@ -116,19 +117,53 @@ class QuestionnaireAnalysis:
         return df, arr
     # endregion
 
+    # region Q5
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+        with it.
+
+        If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+        score should be NA. Otherwise, the score is simply the mean of the other grades.
+        The datatype of score is UInt8, and the floating point raw numbers should be
+        rounded down.
+
+        Parameters
+        ----------
+        maximal_nans_per_sub : int, optional
+            Number of allowed NaNs per subject before giving a NA score.
+
+        Returns
+        -------
+        pd.DataFrame
+            A new DF with a new column - "score".
+        """
+        cols = ['q1', 'q2', 'q3', 'q4', 'q5']
+        nans = [i for i, row in self.data[cols].iterrows() if len(cols) - row.count() > maximal_nans_per_sub]
+        score = [math.floor(row.mean()) for _, row in self.data[cols].iterrows()]
+        for i in nans:
+            score[i] = pd.NA
+        score = pd.Series(score, name="score", dtype=pd.UInt8Dtype())
+        df = pd.concat([self.data, score], axis=1)
+        return df
+    # endregion
+
+
+
 if __name__ == '__main__':
     print("Question 1")
     filepath = r"C:\Users\Shaked Turk\OneDrive\Desktop\python_for_neuroscience\hw5\data.json"
     a = QuestionnaireAnalysis(data_fname=filepath)
     a.read_data()
-    hist, bins = a.show_age_distrib()
-    print(f"hist={hist}")
-    print(f"\nbins={bins}")
+    # hist, bins = a.show_age_distrib()
+    # print(f"hist={hist}")
+    # print(f"\nbins={bins}")
     # print(a.remove_rows_without_mail())
     # df, arr = a.fill_na_with_mean()
     # print(f"type df={type(df)}")
     # print(f"type arr={type(arr)}")
     # print(f"\ndf=\n{df}")
     # print(f"\narr=\n{arr}")
+    print(a.score_subjects())
+
 
   
