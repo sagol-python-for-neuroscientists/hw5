@@ -166,7 +166,7 @@ class QuestionnaireAnalysis:
 
 
 if __name__ == '__main__':
-    filepath = r"C:\Users\Shaked Turk\OneDrive\Desktop\python_for_neuroscience\hw5\data.json"
+    filepath = r"data.json"
     a = QuestionnaireAnalysis(data_fname=filepath)
     a.read_data()
     print("\nQuestion 1")
