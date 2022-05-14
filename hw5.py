@@ -16,18 +16,15 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        print("__init__")
         self._verify_fname(data_fname)  # raises exception if bad fname
         self.data_fname = Path(str(data_fname))
         self.data = None
             
     def __str__(self) -> str:
-        print("__str__")
         return f"QuestionnaireAnalysis: fname='{self.data_fname}', data={self.data}"
 
     def _verify_fname(self, data_fname):
         """ Verify the filename"""        
-        print(f"_verify_fname, data_fname='{data_fname}'")
         data_fname = Path(str(data_fname))
         if not data_fname.exists():
             raise ValueError("the file does not exist")
@@ -36,7 +33,6 @@ class QuestionnaireAnalysis:
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        print("read_data")
         self.data = pd.read_json(self.data_fname)
 
     # region Q1
@@ -49,7 +45,6 @@ class QuestionnaireAnalysis:
         bins : np.ndarray
         Bin edges
         """
-        print("show_age_distrib")
         ages = []
         for participant_i in self.data.to_dict('records'):
             age = participant_i["age"]
@@ -147,23 +142,40 @@ class QuestionnaireAnalysis:
         return df
     # endregion
 
+    # region Q5
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
+    
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with a MultiIndex containing the gender and whether the subject is above
+            40 years of age, and the average score in each of the five questions.
+        """
+        df = self.data
+        df = df[df['age'].notnull()]
+        s = df['age']
+        s = s.where(s > 40, False)
+        s = s.where(s == False, True)
+        df = df.assign(age=s)
+        df.set_index(['gender', 'age'], append=True)
+        return df.groupby(['gender', 'age']).mean()[['q1','q2','q3','q4','q5']]
+    # endregion
+
 
 
 if __name__ == '__main__':
-    print("Question 1")
     filepath = r"C:\Users\Shaked Turk\OneDrive\Desktop\python_for_neuroscience\hw5\data.json"
     a = QuestionnaireAnalysis(data_fname=filepath)
     a.read_data()
-    # hist, bins = a.show_age_distrib()
-    # print(f"hist={hist}")
-    # print(f"\nbins={bins}")
-    # print(a.remove_rows_without_mail())
-    # df, arr = a.fill_na_with_mean()
-    # print(f"type df={type(df)}")
-    # print(f"type arr={type(arr)}")
-    # print(f"\ndf=\n{df}")
-    # print(f"\narr=\n{arr}")
+    print("\nQuestion 1")
+    print(a.show_age_distrib())
+    print("\nQuestion 2")
+    print(a.remove_rows_without_mail())
+    print("\nQuestion 3")
+    print(a.fill_na_with_mean())
+    print("\nQuestion 4")
     print(a.score_subjects())
-
-
-  
+    print("\nQuestion 5")
+    print(a.correlate_gender_age())
