@@ -62,7 +62,8 @@ df : pd.DataFrame
     """
         drop_rows = []
         for i, e in enumerate(self.data.email.values):
-            if e[-1] != "@" and e[0] != "@" and e.count('@') == 1 and e.count('@.') == 0 and e[0] != '.' and e[-1] != '.' and e.count('.') >= 1:
+            if e[-1] != "@" and e[0] != "@" and e.count('@') == 1 and e.count('@.') == 0 and \
+                e[0] != '.' and e[-1] != '.' and e.count('.') >= 1:
                 next
             else:
                 drop_rows.append(i)
@@ -70,6 +71,30 @@ df : pd.DataFrame
         df = self.data.drop(drop_rows, inplace=False)
         return df
 
+    def fill_na_with_mean(self) -> tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+    all questions, and replaces that missing value with the mean of the
+    other grades for that student.
+
+Returns
+-------
+df : pd.DataFrame
+  The corrected DataFrame after insertion of the mean grade
+arr : np.ndarray
+      Row indices of the students that their new grades were generated
+    """
+        q_cols = ['q1', 'q2', 'q3', 'q4', 'q5']
+        df = self.data
+        save_index = []
+        for ind in df.index:
+            if pd.isna(df[q_cols].iloc[ind]).any() == True:
+                save_index.append(ind)
+                q_mean = df[q_cols].iloc[ind].mean()
+                row = df[q_cols].iloc[ind]
+                row = row.replace(np.nan, q_mean)
+                df.loc[ind,q_cols] = row
+        arr = np.array(save_index)
+        return df, arr
 
 
 p = 'data.json'
@@ -78,14 +103,18 @@ t = QuestionnaireAnalysis(p)
 #print(t.data_fname) #data.json
 #print(type(t)) #class
 t.read_data()
-print(len(t.data))
+#print(len(t.data))
 #data = t.data
 #print(t.data) #100 rows, 12 columns
 #print(type(t.data)) #pandas data frame
-#print(data.columns)
+#print(t.data.columns)
 #age = t.show_age_distrib()
 #print(age)
 #print(type(age))
-r = t.remove_rows_without_mail()
-print(len(r))
-print(len(t.data))
+#r = t.remove_rows_without_mail()
+#print(len(r))
+#print(len(t.data))
+#print(t.data)
+#n = t.fill_na_with_mean()
+#print(n)
+#print(type(n))
