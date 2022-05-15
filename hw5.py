@@ -4,6 +4,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
 import matplotlib.pyplot as plt
+from os.path import exists
 
 class QuestionnaireAnalysis:
     """
@@ -13,8 +14,11 @@ class QuestionnaireAnalysis:
 
     # 0
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = data_fname
-
+        # if the file does not exist
+        if not exists(data_fname):
+            raise ValueError
+        self.data_fname = pathlib.Path(data_fname)
+            
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
@@ -52,7 +56,8 @@ class QuestionnaireAnalysis:
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
             """
-        mail_pattern = '^[^@\.][\w\d\.-]*@[^\.][\w\d-]*\.[\w\d]*[^@\.]$'
+        # regex
+        mail_pattern = '^[^@\\.][\w\d\\.-]*@[^\\.][\w\d-]*\\.[\w\d]*[^@\\.]$'
         df = self.data[self.data.email.str.match(mail_pattern)].reset_index(drop=True)
         return df
     
@@ -73,7 +78,6 @@ class QuestionnaireAnalysis:
         df = self.data
         nan_values = df[['q1', 'q2', 'q3', 'q4', 'q5']].isna().any(axis=1)
         arr = np.array(nan_values.index[nan_values == True])
-        
         # create DataFrame
         q_means = np.mean(df[['q1', 'q2', 'q3', 'q4', 'q5']], axis=1)
         df.q1.fillna(q_means, inplace=True) # fill NaN with mean values
