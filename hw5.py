@@ -11,10 +11,14 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        if type(data_fname) != pathlib.Path:
+        try:
             data_fname = pathlib.Path(data_fname)
+        except:
+            raise ValueError("Only 'pathlib.Path' and 'str' are allowed")
+        if not data_fname.is_file():         
+            raise ValueError("file is missing")
+        
         self.data_fname = data_fname
-        self.read_data()
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
