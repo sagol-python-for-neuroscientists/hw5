@@ -33,10 +33,8 @@ class QuestionnaireAnalysis:
         return self.data
         
         
-    
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
-
     Returns
     -------
     hist : np.ndarray
@@ -44,12 +42,11 @@ class QuestionnaireAnalysis:
     bins : np.ndarray
     Bin edges
         """
-
         _,plot=plt.subplots()
         bin_cnt,edges,_=plot.hist(self.data['age'],bins=np.arange(0,110,10))
-        plot.set_xlabel('age')
-        plot.set_ylabel('counts')
-        plot.set_title('age disribution')
+        plot.set_xlabel('Age')
+        plot.set_ylabel('Counts')
+        plot.set_title('Age disribution')
         plt.show()
         return bin_cnt,edges
                     
@@ -62,8 +59,6 @@ class QuestionnaireAnalysis:
     A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
     the (ordinal) index after a reset.
         """
-        
-
         # A quick trick to check for invalid emails:
         regex= r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Z|a-z]{1,}\b'
         corrected_df=self.data[self.data.email.str.match(regex)].reset_index(drop=True)
