@@ -1,11 +1,11 @@
 import pathlib
 import json
-from pydoc import resolve
 from typing import Union
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
+
 
 
 class QuestionnaireAnalysis:
@@ -70,8 +70,7 @@ class QuestionnaireAnalysis:
             cond = all([ad.count('@') == 1, ad.find('@') !=0, ad[::-1].find('@')!=0, 
             ad.count('.')>0, ad.find('.') !=0, ad[::-1].find('.')!=0, ad.count('@.')==0 ])
             if cond is True: 
-                cond_idxs.append(i)
-                
+                cond_idxs.append(i)                   
             i = i+1
 
 
@@ -136,6 +135,40 @@ class QuestionnaireAnalysis:
         data['score'] = np.floor(pd.to_numeric(data['score'], errors='coerce')).astype('UInt8')
 
         return data
+
+
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """Looks for a correlation between the gender of the subject, their age
+        and the score for all five questions.
+
+        Returns
+        -------
+        pd.DataFrame
+        A DataFrame with a MultiIndex containing the gender and whether the subject is above
+        40 years of age, and the average score in each of the five questions.
+        """
+        data = self.data
+        data = data.dropna(subset = ['age'])
+        
+        # multi index
+        lvl_rows = range(0, len(data))
+        lvl_gender = data.gender.values
+        lvl_age = data.age.values > 40
+        
+        
+        mi = pd.MultiIndex.from_arrays([lvl_rows, lvl_gender, lvl_age], names=['row', 'gender', 'age'])
+        data.index = mi
+        data = data.drop(['age', 'gender', 'id'], axis=1)
+        
+        # group by
+        data_groups = data.groupby(['gender', 'age']).mean()
+
+        data_groups.plot(kind="bar") # plotting
+        plt.show()
+
+        return(data_groups)
+
+
 
 
 
