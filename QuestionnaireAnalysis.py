@@ -96,6 +96,36 @@ arr : np.ndarray
         arr = np.array(save_index)
         return df, arr
 
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+    with it.
+
+    If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+    score should be NA. Otherwise, the score is simply the mean of the other grades.
+    The datatype of score is UInt8, and the floating point raw numbers should be
+    rounded down.
+
+    Parameters
+    ----------
+    maximal_nans_per_sub : int, optional
+        Number of allowed NaNs per subject before giving a NA score.
+
+    Returns
+    -------
+    pd.DataFrame
+        A new DF with a new column - "score".
+    """
+        df = self.data
+        df["score"] = ""
+        q_cols = ['q1', 'q2', 'q3', 'q4', 'q5']
+        for ind in df.index:
+            if df.loc[ind,q_cols].isna().sum() > maximal_nans_per_sub:
+                df.loc[ind,"score"] = np.nan
+            else:
+                df.loc[ind,"score"] = df.loc[ind,q_cols].mean()
+        return df
+
+
 
 p = 'data.json'
 t = QuestionnaireAnalysis(p)
@@ -118,3 +148,5 @@ t.read_data()
 #n = t.fill_na_with_mean()
 #print(n)
 #print(type(n))
+s = t.score_subjects()
+print(type(s))
