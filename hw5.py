@@ -51,7 +51,7 @@ class QuestionnaireAnalysis:
             if not np.isnan(age):
                 ages.append(age)
         hist, bins, _ = plt.hist(ages, bins=[0,10,20,30,40,50,60,70,80,90,100])
-        # plt.show()
+        plt.show()
         return hist, bins
     # endregion
 
@@ -112,7 +112,7 @@ class QuestionnaireAnalysis:
         return df, arr
     # endregion
 
-    # region Q5
+    # region Q4
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
         with it.
@@ -133,8 +133,8 @@ class QuestionnaireAnalysis:
             A new DF with a new column - "score".
         """
         cols = ['q1', 'q2', 'q3', 'q4', 'q5']
-        nans = [i for i, row in self.data[cols].iterrows() if len(cols) - row.count() > maximal_nans_per_sub]
-        score = [math.floor(row.mean()) for _, row in self.data[cols].iterrows()]
+        nans = [i for i, row in self.data[cols].iterrows() if len(cols) - row.count() > maximal_nans_per_sub]   # row indices containing >maximal_nans_per_sub NaNs
+        score = [math.floor(row.mean()) for _, row in self.data[cols].iterrows()]   # means of all rows
         for i in nans:
             score[i] = pd.NA
         score = pd.Series(score, name="score", dtype=pd.UInt8Dtype())
