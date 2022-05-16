@@ -157,3 +157,4 @@ pd.DataFrame
         df_age = df_age.set_index(['gender', 'age'], append=True)
         new_df = df_age[q_cols].groupby(level=['gender', 'age']).mean()
         return new_df
+
