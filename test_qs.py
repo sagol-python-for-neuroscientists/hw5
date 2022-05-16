@@ -21,7 +21,6 @@ def test_missing_file():
     with pytest.raises(ValueError):
         QuestionnaireAnalysis(fname)
 
-
 def test_wrong_input_type():
     fname = 2
     with pytest.raises(TypeError):
@@ -99,7 +98,6 @@ def test_score_dtype():
     df = q.score_subjects()
     assert isinstance(df["score"].dtype, pd.UInt8Dtype)
 
-
 def test_score_results():
     truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
     fname = 'data.json'
@@ -107,7 +105,6 @@ def test_score_results():
     q.read_data()
     df = q.score_subjects()
     assert df["score"].equals(truth)
-
 
 def test_correlation():
     truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age'])

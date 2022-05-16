@@ -13,7 +13,11 @@ class QuestionnaireAnalysis:
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
         # ...
-        self.data_fname = pathlib.Path(data_fname)
+        path = pathlib.Path(data_fname)
+        if path.is_file():
+            self.data_fname = path
+        else:
+            raise ValueError
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
