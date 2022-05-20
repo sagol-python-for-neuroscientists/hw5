@@ -75,7 +75,7 @@ class QuestionnaireAnalysis:
             Row indices of the students that their new grades were generated
             """
         # create indices array
-        df = self.data
+        df = self.data.copy()
         nan_values = df[['q1', 'q2', 'q3', 'q4', 'q5']].isna().any(axis=1)
         arr = np.array(nan_values.index[nan_values == True])
         # create DataFrame
@@ -128,4 +128,11 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
-        pass
+        df = self.data.dropna(subset='age') # drop NaN values
+        df['age'] = df['age'] > 40          # change 'age' by condition
+        # a | create Multindex
+        multi = df.set_index([df.index, 'gender', 'age'])
+        # b | create groupby object
+        grp = multi.groupby(level=['gender', 'age'])
+        # c | return mean for each group
+        return grp.mean().drop('id', axis=1)
