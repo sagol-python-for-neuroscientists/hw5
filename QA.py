@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Union, Tuple
 import json
@@ -36,12 +37,17 @@ class QuestionnaireAnalysis:
         ages = self.data["age"].replace("nan", 0).to_numpy()
         bins = np.asarray([(x,x+10) for x in range(0,100,10)])
         count = []
+        bin_names = []
 
         for values in bins:
             count.append(np.count_nonzero((ages>values[0])&(ages<values[1])))
+        hist = np.array(count)
 
-        hist = np.ndarray(count)
-
+        for combo in bins:
+            bin_names.append(str(combo[0])+'-'+str(combo[1]))
+        plt.bar(bin_names,hist)
+        plt.show()
+        
         return hist, bins
 
 
@@ -55,6 +61,7 @@ class QuestionnaireAnalysis:
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
         """
+
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
         all questions, and replaces that missing value with the mean of the
