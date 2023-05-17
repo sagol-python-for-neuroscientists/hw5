@@ -23,6 +23,7 @@ class QuestionnaireAnalysis:
         """
         list_of_dict = json.loads(self.data_fname.read_text())
         self.data = pd.DataFrame(list_of_dict).set_index("id")
+        self.data = self.data.replace("nan", np.NaN)
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
@@ -34,7 +35,7 @@ class QuestionnaireAnalysis:
         bins : np.ndarray
         Bin edges
         """    
-        ages = self.data["age"].replace("nan", 0).to_numpy()
+        ages = self.data["age"]#.replace("nan", 0).to_numpy()
         bins = np.asarray([(x,x+10) for x in range(0,100,10)])
         count = []
         bin_names = []
@@ -50,8 +51,6 @@ class QuestionnaireAnalysis:
         
         return hist, bins
 
-
-
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
 
@@ -61,6 +60,23 @@ class QuestionnaireAnalysis:
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
         """
+        def conditions_for_mail(email: str):
+            if (email.count("@") != 1) | (email.find("@") == 0) | (email.find("@") == len(email)-1):
+                return False
+            elif (email.count(".") == 0) | (email.find(".") == 0)| (email.rfind(".") == len(email)-1):
+                return False
+            elif (email[email.find("@") + 1] == "."):
+                return False
+            else:
+                return True
+
+        new_df = self.data[[(conditions_for_mail(x) == True) for x in self.data.email.values.tolist()]]
+        new_df.reset_index(drop=True)
+        self.data = new_df
+
+        return new_df
+
+        
 
     def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
@@ -74,6 +90,10 @@ class QuestionnaireAnalysis:
         arr : np.ndarray
             Row indices of the students that their new grades were generated
         """
+
+        question_df = self.data.loc[:,"q1":"q5"]
+        new_df = question_df.apply(lambda row: row.fillna(row.mean()), axis=1)
+
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
         with it.
