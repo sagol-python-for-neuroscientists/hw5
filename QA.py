@@ -72,7 +72,6 @@ class QuestionnaireAnalysis:
 
         new_df = self.data[[(conditions_for_mail(x) == True) for x in self.data.email.values.tolist()]]
         new_df.reset_index(drop=True)
-        self.data = new_df
 
         return new_df
 
@@ -92,7 +91,17 @@ class QuestionnaireAnalysis:
         """
 
         question_df = self.data.loc[:,"q1":"q5"]
-        new_df = question_df.apply(lambda row: row.fillna(row.mean()), axis=1)
+        arr = np.array(question_df.isna().any(axis=1).index)
+        new_question_df = question_df.apply(lambda row: row.fillna(row.mean()), axis=1)
+        new_df = self.data.copy()
+        new_df.loc[:,"q1":"q5"] = new_question_df
+
+        return new_df , arr
+    
+    if __name__ == '__main__' :
+        read_data()
+        remove_rows_without_mail()
+        fill_na_with_mean()
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
