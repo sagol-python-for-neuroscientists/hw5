@@ -98,10 +98,10 @@ class QuestionnaireAnalysis:
 
         return new_df , arr
     
-    if __name__ == '__main__' :
-        read_data()
-        remove_rows_without_mail()
-        fill_na_with_mean()
+    #if __name__ == '__main__' :
+    #    read_data()
+    #    remove_rows_without_mail()
+    #    fill_na_with_mean()
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
@@ -122,6 +122,16 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
+        
+        count_non_na = self.data.loc[:,"q1":"q5"].count(axis=1)
+        index_na = count_non_na < (5 - maximal_nans_per_sub)
+        new_df = self.data.copy()
+        new_df['score'] = 0
+        question_df = self.data.loc[:,"q1":"q5"]
+        new_df['score'] = new_df['score'].mask(~index_na, question_df.mean(axis=1)).astype(dtype="uint8").replace(0,"NA")
+
+        return new_df    
+
     def correlate_gender_age(self) -> pd.DataFrame:
         """Looks for a correlation between the gender of the subject, their age
         and the score for all five questions.
