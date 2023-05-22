@@ -117,7 +117,6 @@ class QuestionnaireAnalysis:
             A DataFrame with a MultiIndex containing the gender and whether the subject is above
             40 years of age, and the average score in each of the five questions.
         """
-        # set multiindex
         df = self.data.reset_index()
         print(df.columns)
         df['age'] = df['age'] > 40
