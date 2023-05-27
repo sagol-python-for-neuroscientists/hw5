@@ -3,6 +3,7 @@ import numpy as np
 import pathlib
 import pandas as pd
 import matplotlib.pyplot as plt
+import string
 
 
 
@@ -16,11 +17,16 @@ class QuestionnaireAnalysis:
     def __init__(self, data_fname: Union[pathlib.Path, str]):
         self.data_fname = pathlib.Path(pathlib.Path.cwd().joinpath(pathlib.Path(data_fname)))
         # ...
-        
+            
 
     def read_data(self):
-        """Reads the json data located in self.data_fname into memory, to the attribute self.dat """
-        self.dat = pd.read_json(self.data_fname)
+        """Reads the json data located in self.data_fname into memory, to the attribute self.data """
+        self.data = pd.read_json(self.data_fname)
+    
+    # def __str__(self) -> str:
+    #     email_colum = self.data['email']
+    #     return f'{email_colum}'
+
 
     
     def show_age_distrib(self) -> tuple[np.ndarray, np.ndarray]:
@@ -35,14 +41,79 @@ class QuestionnaireAnalysis:
    bins : np.ndarray
      Bin edges
         
-        
-        
+
         """
-        self.dat = self.dat.dropna(subset=["age"])
+        self.data = self.data.dropna(subset=["age"])
         bins = np.arange(0, 101, 10)
-        counts, edges, plot = plt.hist(self.dat['age'], bins)
+        counts, edges, plot = plt.hist(self.data['age'], bins)
         plt.show()
         return counts, edges
+    
+
+    
+    def remove_rows_without_mail(self) -> pd.DataFrame:
+        """Checks self.data for rows with invalid emails, and removes them.
+
+    Returns
+    -------
+    df : pd.DataFrame
+    A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
+    the (ordinal) index after a reset.
+    """
+        email_column = self.data['email']
+        invalid_rows_indices = []
+        for i, row_email in enumerate(email_column[:99]):
+            row_email = str(email_column.iloc[i])
+            if row_email.count('@') != 1 or \
+                row_email.startswith('@') or \
+                row_email.endswith('@') or \
+                '.' not in row_email or \
+                row_email.startswith('.') or \
+                row_email.endswith('.'):
+                invalid_rows_indices.append(i)
+                continue
+
+            at_sign_index = row_email.index('@')
+            if row_email.index('.') == at_sign_index + 1:
+                invalid_rows_indices.append(i)
+
+        self.data = self.data.drop(index=invalid_rows_indices)
+        self.data = self.data.reset_index(drop=True)
+        print(self.data['email'].to_string)
+        return self.data
+
+             
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
 
 
 
