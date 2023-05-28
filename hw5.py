@@ -101,10 +101,10 @@ class QuestionnaireAnalysis:
            A new DF with a new column - "score".
        """
        
-       new_df = self.data.copy()
-       nan_sum = new_df.loc[:, "q1":"q5"].isnull().sum(1)
-       new_df['score'] = new_df.loc[:, "q1":"q5"].mean(1).apply(np.floor).astype('UInt8')
-       new_df.loc[nan_sum>maximal_nans_per_sub, 'score'] = np.nan
+       new_df = self.data.copy() #Let's make sure we don't change the og data
+       nan_sum = new_df.loc[:, "q1":"q5"].isnull().sum(1)  #find and sum all the nans
+       new_df['score'] = new_df.loc[:, "q1":"q5"].mean(1).apply(np.floor).astype('UInt8') #create new column with avg score.
+       new_df.loc[nan_sum>maximal_nans_per_sub, 'score'] = np.nan #turn the score for anybody over the nan threshold to nan
        return new_df
  
 
