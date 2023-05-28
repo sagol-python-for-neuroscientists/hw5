@@ -1,5 +1,5 @@
 import pathlib
-
+import pdb
 import pytest
 
 from hw5 import *
@@ -8,11 +8,15 @@ from hw5 import *
 def test_valid_input():
     fname = pathlib.Path(__file__)
     q = QuestionnaireAnalysis(fname)
+    #import pdb; pdb.set_trace()
+    # print(type(fname))
+    # print(type(q.data_fame))
     assert fname == q.data_fname
 
 
 def test_str_input():
     q = QuestionnaireAnalysis(__file__)
+    #import pdb; pdb.set_trace()
     assert pathlib.Path(__file__) == q.data_fname
 
 
@@ -47,6 +51,7 @@ def test_correct_age_distrib_hist():
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
     q.read_data()
+    #import pdb; pdb.set_trace()
     assert np.array_equal(q.show_age_distrib()[0], truth['hist'])
 
 
@@ -64,6 +69,7 @@ def test_email_validation():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     corrected = q.remove_rows_without_mail()
+    #import pdb; pdb.set_trace()
     assert truth["email"].equals(corrected["email"])
 
 
@@ -106,6 +112,7 @@ def test_score_results():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     df = q.score_subjects()
+    #import pdb; pdb.set_trace()
     assert df["score"].equals(truth)
 
 
@@ -115,4 +122,5 @@ def test_correlation():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     df = q.correlate_gender_age()
+    # import pdb; pdb.set_trace()
     pd.testing.assert_frame_equal(df, truth)
