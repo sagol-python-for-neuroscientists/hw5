@@ -15,18 +15,16 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = pathlib.Path(pathlib.Path.cwd().joinpath(pathlib.Path(data_fname)))
-        # ...
+        self.data_fname = pathlib.Path(data_fname)
+        if not self.data_fname.exists():
+            raise ValueError("File does not exsist.")
+
             
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to the attribute self.data """
         self.data = pd.read_json(self.data_fname)
     
-    # def __str__(self) -> str:
-    #     email_colum = self.data['email']
-    #     return f'{email_colum}'
-
 
     
     def show_age_distrib(self) -> tuple[np.ndarray, np.ndarray]:
@@ -43,16 +41,16 @@ class QuestionnaireAnalysis:
         
 
         """
-        self.data = self.data.dropna(subset=["age"])
+        age_dist_data = self.data.dropna(subset=["age"])
         bins = np.arange(0, 101, 10)
-        counts, edges, plot = plt.hist(self.data['age'], bins)
-        plt.show()
+        counts, edges, plot = plt.hist(age_dist_data['age'], bins)
         return counts, edges
     
 
     
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
+        
 
     Returns
     -------
@@ -62,7 +60,7 @@ class QuestionnaireAnalysis:
     """
         email_column = self.data['email']
         invalid_rows_indices = []
-        for i, row_email in enumerate(email_column[:99]):
+        for i, row_email in enumerate(email_column[:self.data.shape[0]]):
             row_email = str(email_column.iloc[i])
             if row_email.count('@') != 1 or \
                 row_email.startswith('@') or \
@@ -79,11 +77,107 @@ class QuestionnaireAnalysis:
 
         self.data = self.data.drop(index=invalid_rows_indices)
         self.data = self.data.reset_index(drop=True)
-        print(self.data['email'].to_string)
         return self.data
 
              
             
+
+    def fill_na_with_mean(self) -> tuple[pd.DataFrame, np.ndarray]:
+        """Finds, in the original DataFrame, the subjects that didn't answer
+       all questions, and replaces that missing value with the mean of the
+       other grades for that student.
+
+    Returns
+    -------
+    df : pd.DataFrame
+      The corrected DataFrame after insertion of the mean grade
+    arr : np.ndarray
+         Row indices of the students that their new grades were generated
+     """
+        
+        
+        qs_columns = self.data.loc[:, 'q1': 'q5']
+        generatd_indices = []
+        new_data = self.data.copy()
+
+        for i in range(new_data.shape[0]):
+            student_grades = qs_columns.iloc[i]
+
+            if not np.isnan(student_grades).any():
+                continue
+
+            filled_grades = student_grades.fillna(student_grades.dropna().mean())
+            student_grades= filled_grades
+
+            generatd_indices.append(i)
+        
+        arr = np.array(generatd_indices)
+        return (self.data, arr)
+
+
+    def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
+        """Calculates the average score of a subject and adds a new "score" column
+       with it.
+
+       If the subject has more than "maximal_nans_per_sub" NaN in his grades, the
+       score should be NA. Otherwise, the score is simply the mean of the other grades.
+       The datatype of score is UInt8, and the floating point raw numbers should be
+       rounded down.
+
+       Parameters
+       ----------
+       maximal_nans_per_sub : int, optional
+           Number of allowed NaNs per subject before giving a NA score.
+
+       Returns
+       -------
+       pd.DataFrame
+           A new DF with a new column - "score".
+
+        """
+        qs_columns = self.data.loc[:, 'q1': 'q5']
+        mean_score = qs_columns.mean(axis=1)
+        NA_index  = qs_columns.count(axis=1) < (qs_columns.shape[1] - maximal_nans_per_sub)
+        mean_score[NA_index] = np.nan
+
+        mean_score = np.floor(mean_score).astype('UInt8')
+        self.data['score'] = mean_score
+
+        return self.data
+
+
+        
+    def correlate_gender_age(self) -> pd.DataFrame:
+        """a. Use the original DataFrame and transform its index into a MultiIndex with three levels: 
+        the ordinal index (row number), gender and age.
+
+        b. Allocate the different subjects into groups based on two parameters: Their gender, and whether their age is above or below 40. Hint - use `df.groupby`. 
+        The result should be similar to what is shown in the figure below (you don't have to plot it yourself).
+
+        c. Return the DataFrame containing the average result per question per group.
+
+
+        Looks for a correlation between the gender of the subject, their age
+       and the score for all five questions.
+
+       Returns
+       -------
+       pd.DataFrame
+           A DataFrame with a MultiIndex containing the gender and whether the subject is above
+           40 years of age, and the average score in each of the five questions.
+        """
+
+        corr_df = self.data.copy()
+        corr_df.reset_index(inplace=True)
+        corr_df.set_index(['index', 'gender', 'age'], inplace=True)
+        corr_df.index.names = ['row number', 'gender', 'age']
+        print(corr_df.to_string())
+
+
+
+   
+
+           
 
 
 
