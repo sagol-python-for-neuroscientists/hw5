@@ -79,3 +79,10 @@ class QuestionnaireAnalysis:
         new_df['score'] = score
 
         return new_df
+    
+if __name__ == '__main__':
+    # Question 1
+    param1 = val1
+    param2 = val2
+    return_value = function_for_question1(param1,param2)
+    print(f"Question 1 solution: ")
