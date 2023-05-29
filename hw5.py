@@ -122,6 +122,10 @@ class QuestionnaireAnalysis:
        A DataFrame with a MultiIndex containing the gender and whether the subject is above
        40 years of age, and the average score in each of the five questions.
    """
-
+       age_df=self.data[self.data['age'].notna()] #remove NaN into new df
+       age_df['age'] = np.where(age_df['age']>40, True, False) #define age as <40<
+       age_df=age_df.set_index(['gender','age']) #make into multiIndex
+       mean_score = age_df.groupby(['gender','age'])[["q1","q2","q3","q4","q5"]].mean()
+       return(mean_score)
 
 
