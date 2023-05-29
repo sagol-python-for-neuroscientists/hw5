@@ -123,12 +123,11 @@ class QuestionnaireAnalysis:
        how_many = count_NaN_values(df)  
        mean = df[columns].mean(axis=1)
        mean_f = np.floor(mean).astype('UInt8')
-       score = mean_f
        condition_t = how_many > maximal_nans_per_sub
-       score[condition_t] = pd.NA
-       condition_f = how_many <= 1
-       score[condition_f]= mean_f.astype('UInt8')
-       df['score'] = score
+       mean_f[condition_t] = pd.NA
+       condition_f = how_many <= maximal_nans_per_sub
+       mean_f[condition_f]= mean_f.astype('UInt8')
+       df['score'] = mean_f
            
        return df
     
