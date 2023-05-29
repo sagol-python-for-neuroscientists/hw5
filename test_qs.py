@@ -1,8 +1,8 @@
 import pathlib
-
 import pytest
-
-from hw5 import *
+from hw5 import QuestionnaireAnalysis
+import pandas as pd
+import numpy as np
 
 
 def test_valid_input():
@@ -74,7 +74,7 @@ def test_fillna_rows():
     q.read_data()
     _, rows = q.fill_na_with_mean()
     assert np.array_equal(truth, rows)
-    
+
 
 def test_fillna_df():
     truth = pd.read_csv('tests_data/q3_fillna.csv')
