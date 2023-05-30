@@ -1,8 +1,9 @@
 import pathlib
-
+import pandas as pd
+import numpy as np
 import pytest
 
-from hw5 import *
+from hw5_q1 import QuestionnaireAnalysis
 
 
 def test_valid_input():
@@ -82,7 +83,8 @@ def test_fillna_df():
     q = QuestionnaireAnalysis(fname)
     q.read_data()
     df, _ = q.fill_na_with_mean()
-    df.equals(truth)
+    assert df.equals(truth.round(decimals=2).sort_index(axis=1).reset_index(drop=True))
+
 
 def test_score_exists():
     fname = 'data.json'
@@ -101,7 +103,8 @@ def test_score_dtype():
 
 
 def test_score_results():
-    truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
+    truth = pd.read_csv('tests_data/q4_score.csv', index_col=0).astype("UInt8")
+    truth = truth.squeeze()
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
     q.read_data()
@@ -110,7 +113,7 @@ def test_score_results():
 
 
 def test_correlation():
-    truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age'])
+    truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age']).round(8)
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
     q.read_data()
