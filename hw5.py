@@ -30,7 +30,8 @@ class QuestionnaireAnalysis:
         """
         with open(self.data_fname, 'r') as f:
             data: Dict = json.load(f)
-        self.data = pd.DataFrame(data)
+        self.data = pd.DataFrame(data, columns=['id', 'first_name', 'last_name', 'email', 'timestamp', 'age', 'gender', 'q1', 'q2', 'q3', 'q4', 'q5'])
+        print(self.data)
 
     def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
@@ -46,16 +47,17 @@ class QuestionnaireAnalysis:
             raise ValueError("Data not read yet")
 
         ages = []
-        for participant in self.data:
-            age = participant.get('age')
-            if age is not None and isinstance(age, (int,float)):
-                ages.append(age)
+        print(type(self.data))
+        # Iterate over rows of the dataframe, and append the age to the list
+        for index, row in self.data.iterrows():
+            if row['age'] is not None and isinstance(row['age'], (int,float)):
+                ages.append(row['age'])
 
-        hist, bins, _ = plt.hist(ages, bins='auto', alpha=0.7)
-        plt.xlabel('Age')
-        plt.ylabel('Number of participants')
-        plt.title('Age distribution of participants')
-        plt.grid(True)
+        print(ages)
+        # Create the histogram of ages, as numpy arrays
+        hist, bins = np.histogram(ages, bins=10)
+        # Plot the histogram
+        plt.hist(ages, bins=10)
         plt.show()
 
         return hist, bins
@@ -106,16 +108,11 @@ class QuestionnaireAnalysis:
         if self.data is None:
             raise ValueError("No data has been read.")
 
-        df = self.data.copy()
-        missing_rows = []
-        for subject in df.columns:
-            if is_numeric_dtype(df[subject]):
-                subject_mean = df[subject].mean()
-                missing_mask = df[subject].isnull()
-                df.loc[missing_mask, subject] = subject_mean
-                missing_rows.extend(df.index[missing_mask])
+        df = pd.DataFrame(self.data)
+        df = df.fillna()
 
-        return df, np.array(missing_rows)
+        return df, np.where(missing_values)[0]
+
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
