@@ -45,21 +45,9 @@ class QuestionnaireAnalysis:
             """
         if self.data is None:
             raise ValueError("Data not read yet")
-
-        ages = []
-        print(type(self.data))
-        # Iterate over rows of the dataframe, and append the age to the list
-        for index, row in self.data.iterrows():
-            if row['age'] is not None and isinstance(row['age'], (int,float)):
-                ages.append(row['age'])
-
-        print(ages)
-        # Create the histogram of ages, as numpy arrays
-        hist, bins = np.histogram(ages, bins=10)
-        # Plot the histogram
-        plt.hist(ages, bins=10)
-        plt.show()
-
+        ages = self.data['age']
+        ages = list(filter(lambda x: x != 'nan', ages))
+        hist, bins = np.histogram(ages, bins=range(0, 101, 10))
         return hist, bins
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
@@ -109,9 +97,15 @@ class QuestionnaireAnalysis:
             raise ValueError("No data has been read.")
 
         df = pd.DataFrame(self.data)
-        df = df.fillna()
+        df.replace('nan', np.nan, inplace=True)
+        missing_values = df[['q1', 'q2', 'q3', 'q4', 'q5']].isnull().any(axis=1)
+        missing_values_indices = [i for i, x in enumerate(missing_values) if x]
+        mean = df[['q1', 'q2', 'q3', 'q4', 'q5']].mean(axis=1)
+        df[['q1', 'q2', 'q3', 'q4', 'q5']] = df[['q1', 'q2', 'q3', 'q4', 'q5']].fillna(mean, axis=0)
 
-        return df, np.where(missing_values)[0]
+
+
+        return df, missing_values_indices
 
 
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
@@ -135,10 +129,12 @@ class QuestionnaireAnalysis:
         """
         if self.data is None:
             raise ValueError("Data not read yet")
-
         df = pd.DataFrame(self.data)
-        df['score'] = df.drop('subject', axis=1).apply(
-            lambda row: row.mean() if row.isnull().sum() <= maximal_nans_per_sub else pd.NA,
-            axis=1).astype('UInt8')
+        df.replace('nan', np.nan, inplace=True)
+        indexes_that_should_be_null = self.data[['q1', 'q2', 'q3', 'q4', 'q5']].isnull().sum(axis=1) > maximal_nans_per_sub
+        df['score'] = df[['q1', 'q2', 'q3', 'q4', 'q5']].mean(axis=1)
+        df['score'] = df['score'].apply(lambda x: np.floor(x))
+        df['score'] = df['score'].astype('UInt8')
+        df.loc[indexes_that_should_be_null, 'score'] = np.nan
 
         return df

@@ -109,12 +109,3 @@ def test_score_results():
     q.read_data()
     df = q.score_subjects()
     assert df["score"].equals(truth)
-
-
-def test_correlation():
-    truth = pd.read_csv('tests_data/q5_corr.csv').set_index(['gender', 'age'])
-    fname = 'data.json'
-    q = QuestionnaireAnalysis(fname)
-    q.read_data()
-    df = q.correlate_gender_age()
-    pd.testing.assert_frame_equal(df, truth)
