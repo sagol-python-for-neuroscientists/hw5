@@ -1,9 +1,10 @@
-from typing import Union, Tuple
+from typing import Union
 import pathlib
-import pandas as pd
-import numpy as np
+import json
 import matplotlib.pyplot as plt
-
+import numpy as np
+import pandas as pd
+from pathlib import Path
 
 
 class QuestionnaireAnalysis:
@@ -13,43 +14,43 @@ class QuestionnaireAnalysis:
     """
 
     def __init__(self, data_fname: Union[pathlib.Path, str]):
-        self.data_fname = pathlib.Path(data_fname)
-        self.data = [] #just to mark it should be here
-        if not(self.data_fname.exists()):
-            raise ValueError('Path does not exist')
-        #self.read_data()
+        if Path(data_fname).exists(): #if path exists in directory
+            self.data_fname=Path(data_fname)
+        else:
+            raise ValueError("Invalid path type")
+        # the self init recieves an str or pathlib name for data_fname
 
     def read_data(self):
         """Reads the json data located in self.data_fname into memory, to
         the attribute self.data.
         """
-        # read data
-        self.data = pd.read_json(self.data_fname)
+        self.data=pd.read_json(self.data_fname) 
+        # the method attirbutes a json file to this class's case properties as its data
+        return self.data
 
-        # force things to be strings
-        self.data[['email','first_name','last_name','gender']] = self.data[['email','first_name','last_name','gender']].astype("string")
 
-    def show_age_distrib(self) -> Tuple[np.ndarray, np.ndarray]:
+
+    def show_age_distrib(self) -> tuple[np.ndarray, np.ndarray]:
         """Calculates and plots the age distribution of the participants.
 
         Returns
         -------
         hist : np.ndarray
-        Number of people in a given bin
+            Number of people in a given bin
         bins : np.ndarray
-        Bin edges
-        """
-        # get series
-        relv_ser = self.data['age']
-
-        # calculate hist
-        data_bins = range(0,110,10)
-        hist, bins = np.histogram(relv_ser,bins=data_bins)
-
-        # plot it
-        plt.stairs(hist, bins)
-        return hist, bins
-
+            Bin edges
+            """
+            
+        ages=self.data.iloc[:]['age'] #takes the age value from each line in the data
+        ages=ages.dropna() #removes NaN age values                
+        hist=plt.hist(ages, bins=10, range=(0,100), edgecolor='black')
+        plt.xlim(0, 100)
+        plt.xticks(np.arange(0, 101, 10)) #array from 0 to 100 with jumps of 10
+        plt.show()
+        return hist
+        
+    
+    
     def remove_rows_without_mail(self) -> pd.DataFrame:
         """Checks self.data for rows with invalid emails, and removes them.
 
@@ -58,44 +59,48 @@ class QuestionnaireAnalysis:
         df : pd.DataFrame
         A corrected DataFrame, i.e. the same table but with the erroneous rows removed and
         the (ordinal) index after a reset.
-        """
-
-        # collect conditions
-        end_OK = self.data['email'].str.endswith(('@','.'))
-        start_OK = self.data['email'].str.startswith(('@','.'))
-        not_follow = self.data['email'].str.contains(r'@\.')
-        contain_at = self.data['email'].str.contains('[@]')
-        contain_dot = self.data['email'].str.contains(r'[\.]')
-        no_more_once = self.data['email'].str.replace('@','',n=1).str.contains('@') # remove 1 '@'. if still contains, it has more than 1 '@'
-
-        # filter table
-        df = self.data[(~end_OK) & (~start_OK) & (~not_follow) & contain_at & contain_dot & (~no_more_once)]
-
-        # fix table to match check
-        df[['email','first_name','last_name','gender']] = df[['email','first_name','last_name','gender']].astype("object")
-        df.reset_index(drop=True,inplace=True)
-        return df
-
-    def fill_na_with_mean(self) -> Tuple[pd.DataFrame, np.ndarray]:
+            """
+        email_ser=q.data.iloc[:]['email']
+        for ind, value in email_ser.items():
+            if (value.count('@') == 1 and '.' in value and not value.startswith('@') and not value.endswith('@')
+                and not value.startswith('.') and not value.endswith('.') and value.find('@') != value.find('.')-1 
+            ):
+                continue
+            else:
+                self.data=self.data.drop(index=ind) #taking out lines with wrong emails
+        self.data = self.data.reset_index(drop=True) #fixing the number of lines
+        return self.data
+    
+    
+    def fill_na_with_mean(self) -> tuple[pd.DataFrame, np.ndarray]:
         """Finds, in the original DataFrame, the subjects that didn't answer
-        all questions, and replaces that missing value with the mean of the
-        other grades for that student.
+       all questions, and replaces that missing value with the mean of the
+       other grades for that student.
 
         Returns
         -------
-        df : pd.DataFrame
-        The corrected DataFrame after insertion of the mean grade
-        arr : np.ndarray
-        Row indices of the students that their new grades were generated
+         df : pd.DataFrame
+         The corrected DataFrame after insertion of the mean grade
+         arr : np.ndarray
+         Row indices of the students that their new grades were generated
         """
-        q_cols = ["q1","q2","q3","q4","q5"]
-        nan_answers = self.data[q_cols].isnull()
-        arr = nan_answers.any(axis=1).to_numpy().nonzero()[0] # find rows where at least 1 question is empty
 
-        df = self.data[q_cols].T.fillna(self.data[q_cols].mean(axis=1)).T # taken from https://stackoverflow.com/questions/33058590/pandas-dataframe-replacing-nan-with-row-average
-        # df = self.data[q_cols].fillna(self.data[q_cols].mean(axis=1),axis=1) # what I would have done if it was implamented. The problem here is the mismatch between number of replacing, compared to number of replaced
-        return df, arr
-    
+        grades = self.data[['q1', 'q2', 'q3', 'q4', 'q5']]
+        MeanGrade=grades.mean(axis=1, skipna=True)
+        changed_rows = np.array([])
+        
+        for index, row in grades.iterrows():
+            original_row = row.copy()  # Make a copy of the original row
+            grades.loc[index] = row.fillna(MeanGrade[index])
+            if not original_row.equals(grades.loc[index]):
+                changed_rows=np.append(changed_rows, index)
+        self.data[['q1', 'q2', 'q3', 'q4', 'q5']]=grades[['q1', 'q2', 'q3', 'q4', 'q5']]
+        rows=changed_rows.astype(np.int64)
+        results = (self.data, rows)
+        print(type(results))
+        return results
+          
+
     def score_subjects(self, maximal_nans_per_sub: int = 1) -> pd.DataFrame:
         """Calculates the average score of a subject and adds a new "score" column
         with it.
@@ -115,44 +120,54 @@ class QuestionnaireAnalysis:
         pd.DataFrame
             A new DF with a new column - "score".
         """
-        
-        q_cols = ["q1","q2","q3","q4","q5"]
+        #if I wanted to loop it:
+        #for i in range(len(self.data)):    
+        #   if self.data.iloc[i][['q1', 'q2', 'q3', 'q4', 'q5']].isna().sum()>1:
+        #      self.data.loc[i,'Score'] = np.nan
+                                  
+        self.data['score']=self.data[['q1', 'q2', 'q3', 'q4', 'q5']].mean(axis=1, skipna=True) #creats new column with mean of grades       
+        self.data['score']=np.floor(self.data['score']).astype(pd.UInt8Dtype()) #rounds the mean grades and turns into int
+        boolean_for_nan=self.data[['q1', 'q2', 'q3', 'q4', 'q5']].isna().sum(axis=1)>maximal_nans_per_sub #creates a boolean for each row of whether the row has more than one NaN grade
+        #print(boolean_for_nan[-20:-1])
+        self.data.loc[boolean_for_nan,'score']=np.nan   #changes the Scores column grade of the found rows to NaN 
+        #print(self.data['score'].dtype)
+        return self.data
+       
 
-        # add "score" col, with mean of 5 questions
-        mean_vals = self.data[q_cols].mean(axis=1).apply(np.floor).astype("UInt8")
-
-        # count nan per row, find rows with too match nans
-        too_nany = self.data[q_cols].isnull().sum(axis=1) > maximal_nans_per_sub
-
-        # place nan in too nany rows
-        mean_vals[too_nany] = np.nan
-
-        df = self.data
-        df["score"] = mean_vals
-        return df
-    
-    def correlate_gender_age(self) -> pd.DataFrame:
+    #def correlate_gender_age(self) -> pd.DataFrame:
         """Looks for a correlation between the gender of the subject, their age
         and the score for all five questions.
 
         Returns
         -------
         pd.DataFrame
-            A DataFrame with a MultiIndex containing the gender and whether the subject is above
-            40 years of age, and the average score in each of the five questions.
+        A DataFrame with a MultiIndex containing the gender and whether the subject is above
+        40 years of age, and the average score in each of the five questions.
         """
 
-        # get copy of relevant cols, convert "gender" back to obj for test
-        df = self.data[["gender","age","q1","q2","q3","q4","q5"]]
-        df['gender'] = df['gender'].astype("object")
+        # Reset the index to create the ordinal index as a column
+        #self.data.reset_index(inplace=True)
 
-        # convert age to higher than 40 = True
-        df["age"] = df.age > 40
+        # Set the index to a MultiIndex with three levels: ordinal index, gender, and age
+        #self.data.set_index(['index', 'gender', 'age'], inplace=True)
+        #gender=self.data.groupby('gender')
+        #age_above_40 = self.data.index.get_level_values('age')>40
+        #age_group=self.data.groupby(age_above_40)
+        
+        #print(self.data.index('age'))
+        #boolean_for_age=self.data[['age']]>40 #creates a boolean for each row of whether the row has more than one NaN grade
+        #for group_name, group_df in gender:
+        #    print(f"Group: {group_name}")
+         #   print(group_df)
+         #   print()
 
-        # create MultiIndex (Note - keeping the original index is not doing anything)
-        df.set_index(['gender','age'], append=True)
 
-        # Group by gender than age, and mean
-        grouped = df.groupby(['gender','age'])
-        corr_res = grouped.mean()
-        return corr_res
+q= QuestionnaireAnalysis('data.json')
+q.read_data()
+#q.score_subjects()
+
+
+
+
+
+
