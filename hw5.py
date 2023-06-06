@@ -46,7 +46,7 @@ class QuestionnaireAnalysis:
         hist=plt.hist(ages, bins=10, range=(0,100), edgecolor='black')
         plt.xlim(0, 100)
         plt.xticks(np.arange(0, 101, 10)) #array from 0 to 100 with jumps of 10
-        plt.show()
+        #plt.show()
         return hist
         
     
