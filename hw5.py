@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Tuple
 from pathlib import Path
-from typing import 
+from typing import Union
 
 
 class QuestionnaireAnalysis:
