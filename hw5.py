@@ -56,7 +56,7 @@ class QuestionnaireAnalysis:
         return hist, bin_edges
 
     def remove_rows_without_mail(self) -> pd.DataFrame:
-        """Checks self.data for rows with invalid emails and removes them.
+        """Checks self.data for rows with invalid emails and removes them
 
         Returns
         -------
