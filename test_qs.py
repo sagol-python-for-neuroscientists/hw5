@@ -101,7 +101,8 @@ def test_score_dtype():
 
 
 def test_score_results():
-    truth = pd.read_csv('tests_data/q4_score.csv', squeeze=True, index_col=0).astype("UInt8")
+    truth = pd.read_csv('tests_data/q4_score.csv',  index_col=0).astype("UInt8")
+    truth=truth.squeeze()
     fname = 'data.json'
     q = QuestionnaireAnalysis(fname)
     q.read_data()
@@ -116,3 +117,35 @@ def test_correlation():
     q.read_data()
     df = q.correlate_gender_age()
     pd.testing.assert_frame_equal(df, truth)
+
+
+
+test_correct_age_distrib_edges()
+print("test_correct_age_distrib_edges passed!") 
+test_correct_age_distrib_hist()
+print("test_correct_age_distrib_hist passed!")
+test_correlation()
+print("test_correlation passed!")
+test_data_attr_exists()
+print("test_data_attr_exists passed!")
+test_data_attr_is_df()
+print("test_data_attr_is_df passed!")
+test_email_validation()
+print("test_email_validation passed!")  
+test_fillna_df()
+print("test_fillna_df passed!")
+test_fillna_rows()
+print("test_fillna_rows passed!")
+test_missing_file()
+print("test_missing_file passed!")
+test_score_dtype()
+print("test_score_dtype passed!")
+test_score_exists()
+print("test_score_exists passed!")
+test_score_results()
+print("test_score_results passed!")
+test_str_input()
+print("test_str_input passed!")
+test_valid_input()
+print("test_valid_input passed!")   
+print("All tests passed!")
